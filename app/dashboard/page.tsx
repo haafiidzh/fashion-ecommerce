@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <p>Loading...</p>
       </div>
     );
@@ -27,34 +27,65 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
-            >
-              Logout
-            </button>
+    <div className="flex flex-col gap-4 p-4 md:p-10">
+      <div>
+        <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-200">
+          Dashboard
+        </h1>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Selamat datang, {session.user.name}
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        {[
+          { label: "Total Users", value: "1,234" },
+          { label: "Total Products", value: "567" },
+          { label: "Total Orders", value: "890" },
+          { label: "Revenue", value: "$12,345" },
+        ].map((stat, idx) => (
+          <div
+            key={idx}
+            className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800"
+          >
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              {stat.label}
+            </p>
+            <p className="mt-2 text-2xl font-bold text-neutral-800 dark:text-neutral-200">
+              {stat.value}
+            </p>
           </div>
+        ))}
+      </div>
 
-          <div className="space-y-4">
-            <div>
-              <p className="text-gray-600">Selamat datang,</p>
-              <p className="text-xl font-semibold">{session.user.name}</p>
-            </div>
+      {/* Content Area */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+          <h2 className="mb-4 text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+            Recent Activity
+          </h2>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-16 animate-pulse rounded bg-neutral-100 dark:bg-neutral-700"
+              />
+            ))}
+          </div>
+        </div>
 
-            <div className="border-t pt-4">
-              <p className="text-sm text-gray-600">Email:</p>
-              <p className="font-medium">{session.user.email}</p>
-            </div>
-
-            <div className="border-t pt-4">
-              <p className="text-sm text-gray-600">User ID:</p>
-              <p className="font-medium">{session.user.id}</p>
-            </div>
+        <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+          <h2 className="mb-4 text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+            Quick Stats
+          </h2>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-16 animate-pulse rounded bg-neutral-100 dark:bg-neutral-700"
+              />
+            ))}
           </div>
         </div>
       </div>
