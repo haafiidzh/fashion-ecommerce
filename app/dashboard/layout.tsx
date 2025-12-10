@@ -12,6 +12,7 @@ import {
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
+import {FolderTree} from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -42,10 +43,17 @@ export default function DashboardLayout({
       ),
     },
     {
+      label: "Categories",
+      href: "/dashboard/categories",
+      icon: (
+        <FolderTree className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
       label: "Products",
       href: "/dashboard/products",
       icon: (
-        <IconShoppingCart className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+          <IconShoppingCart className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {
