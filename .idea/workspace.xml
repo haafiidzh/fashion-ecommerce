@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="44d7aebb-050c-466a-a1f3-b42cce304213" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/providers.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/providers.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/categories/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/dashboard/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/dashboard/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/dashboard/products/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/dashboard/products/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/products/page.tsx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +44,7 @@
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feat/categories&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feat/products&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
     &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
@@ -104,6 +105,8 @@
       <workItem from="1765205001343" duration="1458000" />
       <workItem from="1765208230233" duration="3549000" />
       <workItem from="1765228806053" duration="6000" />
+      <workItem from="1765327546428" duration="565000" />
+      <workItem from="1765348689711" duration="10000" />
     </task>
     <servers />
   </component>
