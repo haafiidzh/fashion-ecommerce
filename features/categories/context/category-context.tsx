@@ -1,50 +1,34 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { categoryApi } from '@/data/categories';
+import { categoryApi } from '@/features/categories/services/category-service';
 import { Category, CategoryState, CategoryFormData } from '../types/category-types';
+import { toast } from 'sonner';
 
 const initialState: CategoryState = {
     categories: [],
     loading: false,
-    error: null,
 };
 
 type CategoryAction =
     | { type: 'FETCH_CATEGORIES_REQUEST' }
     | { type: 'FETCH_CATEGORIES_SUCCESS'; payload: Category[] }
-    | { type: 'FETCH_CATEGORIES_FAILURE'; payload: string }
-    | { type: 'CREATE_CATEGORY_REQUEST' }
     | { type: 'CREATE_CATEGORY_SUCCESS'; payload: Category }
-    | { type: 'CREATE_CATEGORY_FAILURE'; payload: string }
-    | { type: 'UPDATE_CATEGORY_REQUEST' }
     | { type: 'UPDATE_CATEGORY_SUCCESS'; payload: Category }
-    | { type: 'UPDATE_CATEGORY_FAILURE'; payload: string }
-    | { type: 'DELETE_CATEGORY_REQUEST' }
-    | { type: 'DELETE_CATEGORY_SUCCESS'; payload: number }
-    | { type: 'DELETE_CATEGORY_FAILURE'; payload: string }
-    | { type: 'CLEAR_ERROR' };
+    | { type: 'DELETE_CATEGORY_SUCCESS'; payload: number };
 
 const categoryReducer = (state: CategoryState, action: CategoryAction): CategoryState => {
     switch (action.type) {
         case 'FETCH_CATEGORIES_REQUEST':
-            return { ...state, loading: true, error: null };
+            return { ...state, loading: true };
         case 'FETCH_CATEGORIES_SUCCESS':
             return { ...state, loading: false, categories: action.payload };
-        case 'FETCH_CATEGORIES_FAILURE':
-            return { ...state, loading: false, error: action.payload };
-        case 'CREATE_CATEGORY_REQUEST':
-            return { ...state, loading: true, error: null };
         case 'CREATE_CATEGORY_SUCCESS':
             return {
                 ...state,
                 loading: false,
                 categories: [...state.categories, action.payload],
             };
-        case 'CREATE_CATEGORY_FAILURE':
-            return { ...state, loading: false, error: action.payload };
-        case 'UPDATE_CATEGORY_REQUEST':
-            return { ...state, loading: true, error: null };
         case 'UPDATE_CATEGORY_SUCCESS':
             return {
                 ...state,
@@ -53,20 +37,12 @@ const categoryReducer = (state: CategoryState, action: CategoryAction): Category
                     category.id === action.payload.id ? action.payload : category
                 ),
             };
-        case 'UPDATE_CATEGORY_FAILURE':
-            return { ...state, loading: false, error: action.payload };
-        case 'DELETE_CATEGORY_REQUEST':
-            return { ...state, loading: true, error: null };
         case 'DELETE_CATEGORY_SUCCESS':
             return {
                 ...state,
                 loading: false,
                 categories: state.categories.filter((category) => category.id !== action.payload),
             };
-        case 'DELETE_CATEGORY_FAILURE':
-            return { ...state, loading: false, error: action.payload };
-        case 'CLEAR_ERROR':
-            return { ...state, error: null };
         default:
             return state;
     }
@@ -78,14 +54,12 @@ const CategoryContext = createContext<{
     createCategory: (name: string) => Promise<void>;
     updateCategory: (id: number, name: string) => Promise<void>;
     deleteCategory: (id: number) => Promise<void>;
-    clearError: () => void;
 }>({
     state: initialState,
     fetchCategories: async () => {},
     createCategory: async () => {},
     updateCategory: async () => {},
     deleteCategory: async () => {},
-    clearError: () => {},
 });
 
 export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -97,54 +71,45 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             const categories = await categoryApi.getCategories();
             dispatch({ type: 'FETCH_CATEGORIES_SUCCESS', payload: categories });
         } catch (error) {
-            dispatch({
-                type: 'FETCH_CATEGORIES_FAILURE',
-                payload: error instanceof Error ? error.message : 'An unknown error occurred',
-            });
+            console.error('Failed to fetch categories:', error);
+            toast.error('Gagal memuat kategori');
         }
     };
 
     const createCategory = async (name: string) => {
-        dispatch({ type: 'CREATE_CATEGORY_REQUEST' });
+        dispatch({ type: 'FETCH_CATEGORIES_REQUEST' });
         try {
             const category = await categoryApi.createCategory(name);
             dispatch({ type: 'CREATE_CATEGORY_SUCCESS', payload: category });
+            toast.success('Kategori berhasil dibuat');
         } catch (error) {
-            dispatch({
-                type: 'CREATE_CATEGORY_FAILURE',
-                payload: error instanceof Error ? error.message : 'An unknown error occurred',
-            });
+            console.error('Failed to create category:', error);
+            toast.error('Gagal membuat kategori');
         }
     };
 
     const updateCategory = async (id: number, name: string) => {
-        dispatch({ type: 'UPDATE_CATEGORY_REQUEST' });
+        dispatch({ type: 'FETCH_CATEGORIES_REQUEST' });
         try {
             const category = await categoryApi.updateCategory(id, name);
             dispatch({ type: 'UPDATE_CATEGORY_SUCCESS', payload: category });
+            toast.success('Kategori berhasil diperbarui');
         } catch (error) {
-            dispatch({
-                type: 'UPDATE_CATEGORY_FAILURE',
-                payload: error instanceof Error ? error.message : 'An unknown error occurred',
-            });
+            console.error('Failed to update category:', error);
+            toast.error('Gagal memperbarui kategori');
         }
     };
 
     const deleteCategory = async (id: number) => {
-        dispatch({ type: 'DELETE_CATEGORY_REQUEST' });
+        dispatch({ type: 'FETCH_CATEGORIES_REQUEST' });
         try {
             await categoryApi.deleteCategory(id);
             dispatch({ type: 'DELETE_CATEGORY_SUCCESS', payload: id });
+            toast.success('Kategori berhasil dihapus');
         } catch (error) {
-            dispatch({
-                type: 'DELETE_CATEGORY_FAILURE',
-                payload: error instanceof Error ? error.message : 'An unknown error occurred',
-            });
+            console.error('Failed to delete category:', error);
+            toast.error('Gagal menghapus kategori');
         }
-    };
-
-    const clearError = () => {
-        dispatch({ type: 'CLEAR_ERROR' });
     };
 
     useEffect(() => {
@@ -159,7 +124,6 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
                 createCategory,
                 updateCategory,
                 deleteCategory,
-                clearError,
             }}
         >
             {children}
