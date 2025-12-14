@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import CategoryModal from './category-modal';
 import { Category, CategoryFormData } from '@/features/categories/types/category-types';
 import { useCategory } from '../context/category-context';
 import CategoryDataTable from "@/features/categories/components/category-data-table";
+import CategoryModalContainer from "@/features/categories/components/category-modal";
 
 interface CategoryListProps {
     onNavigateToDetail?: (id: number) => void;
 }
 
 export default function CategoryList({ onNavigateToDetail }: CategoryListProps) {
-    const { state, createCategory, updateCategory, deleteCategory, clearError } = useCategory();
-    const { categories, loading, error } = state;
+    const { state, createCategory, updateCategory, deleteCategory } = useCategory();
+    const { categories, loading } = state;
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -88,18 +88,6 @@ export default function CategoryList({ onNavigateToDetail }: CategoryListProps) 
                 </button>
             </div>
 
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                    {error}
-                    <button
-                        onClick={clearError}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
-
             {loading ? (
                 <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -125,7 +113,7 @@ export default function CategoryList({ onNavigateToDetail }: CategoryListProps) 
                 </div>
             )}
 
-            <CategoryModal
+            <CategoryModalContainer
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 category={editingCategory}
@@ -134,4 +122,4 @@ export default function CategoryList({ onNavigateToDetail }: CategoryListProps) 
             />
         </div>
     );
-};
+}

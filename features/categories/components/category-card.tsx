@@ -2,6 +2,7 @@
 
 import React from 'react';
 import {Category} from "@/features/categories/types/category-types";
+import {formatDate} from "@/lib/utils";
 
 interface CategoryCardProps {
     category: Category;
@@ -16,9 +17,6 @@ export default function CategoryCard({
                                          onDelete,
                                          onView
                                      }: CategoryCardProps) {
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString();
-    };
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
