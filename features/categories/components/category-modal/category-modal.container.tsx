@@ -20,12 +20,15 @@ export default function CategoryModalContainer({
     const [formData, setFormData] = useState<CategoryFormData>({ name: '' });
 
     useEffect(() => {
-        if (category) {
-            setFormData({ name: category.name });
-        } else {
-            setFormData({ name: '' });
+        if (isOpen) {
+            if (category) {
+                setFormData({ name: category.name });
+            } else {
+                setFormData({ name: '' });
+            }
         }
     }, [category, isOpen]);
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
