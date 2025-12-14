@@ -8,6 +8,8 @@ import {
   IconShoppingCart,
   IconSettings,
   IconLogout,
+  IconShield,
+  IconLock,
 } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -36,13 +38,6 @@ export default function DashboardLayout({
       ),
     },
     {
-      label: "Users",
-      href: "/dashboard/users",
-      icon: (
-        <IconUsers className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-    },
-    {
       label: "Categories",
       href: "/dashboard/categories",
       icon: (
@@ -61,6 +56,29 @@ export default function DashboardLayout({
       href: "/dashboard/settings",
       icon: (
         <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+
+    // User Management
+    {
+      label: "Users",
+      href: "/dashboard/users",
+      icon: (
+        <IconUsers className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Roles",
+      href: "/dashboard/roles",
+      icon: (
+        <IconShield className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Permissions",
+      href: "/dashboard/permissions",
+      icon: (
+        <IconLock className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
   ];
@@ -105,8 +123,8 @@ export default function DashboardLayout({
       </Sidebar>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-auto">
-        <div className="flex h-full w-full flex-1 flex-col bg-white md:rounded-tl-2xl md:border md:border-neutral-200 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="flex flex-1 overflow-auto bg-white md:rounded-tl-2xl md:border md:border-neutral-200 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="flex min-h-screen w-full flex-1 flex-col">
           {children}
         </div>
       </div>
