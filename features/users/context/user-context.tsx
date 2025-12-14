@@ -8,7 +8,7 @@ import React, {
   useReducer,
 } from "react";
 import { User, UserState } from "../types/user-types";
-import { usersApi } from "@/data/users";
+import { usersApi } from "../services/user-sevice";
 import { toast } from "sonner";
 
 const initialState: UserState = {
@@ -62,7 +62,7 @@ const userReducer = (state: UserState, action: UserAction): UserState => {
   }
 };
 
-const UserContext = createContext<{
+export const UserContext = createContext<{
   state: UserState;
   fetchUsers: (includeDeleted: boolean) => Promise<void>;
   createUser: (data: User) => Promise<void>;
