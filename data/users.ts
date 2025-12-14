@@ -45,7 +45,6 @@ export const usersApi = {
       gender: user.gender,
     });
 
-    // Axios response.data sudah berisi object { success, message, data }
     const res = response.data;
     if (!res || !res.success || !res.data) {
       throw new Error(res?.message || "Error creating user");
@@ -66,7 +65,6 @@ export const usersApi = {
       gender: userData.gender,
     });
 
-    // Axios response.data sudah berisi object { success, message, data }
     const res = response.data;
     if (!res || !res.success || !res.data) {
       throw new Error(res?.message || "Error updating user");
@@ -78,7 +76,6 @@ export const usersApi = {
   deleteUser: async (userId: number): Promise<void> => {
     const response = await apiClient.delete(`/users/${userId}`);
 
-    // Axios response.data sudah berisi object { success, message, data }
     const res = response.data;
     if (!res || !res.success || !res.data) {
       throw new Error(res?.message || "Error deleting user");
