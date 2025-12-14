@@ -12,7 +12,7 @@ import {
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import {FolderTree} from "lucide-react";
+import { CreditCard, FolderTree, ReceiptText } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -40,6 +40,20 @@ export default function DashboardLayout({
       href: "/dashboard/users",
       icon: (
         <IconUsers className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Orders",
+      href: "/dashboard/orders",
+      icon: (
+        <ReceiptText className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Transactions",
+      href: "/dashboard/transactions",
+      icon: (
+        <CreditCard className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {

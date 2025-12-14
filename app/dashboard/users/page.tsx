@@ -2,9 +2,10 @@
 
 export default function UsersPage() {
   const users = [
-    { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User" },
-    { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "User" },
+    { id: 1, name: "Athala Naufal Pratama", email: "athala@example.com", role: "Admin" },
+    { id: 2, name: "Haifdz", email: "haifdz@example.com", role: "User" },
+    { id: 3, name: "Iqmal", email: "iqmal@example.com", role: "User" },
+    { id: 4, name: "Eko", email: "eko@example.com", role: "User" },
   ];
 
   return (
