@@ -1,75 +1,101 @@
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+"use client";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Permission } from "../types/permission-types";
 import { Button } from "@/components/ui/button";
 import { IconDots, IconEdit, IconEye, IconTrash } from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+import { DataTable } from "@/components/ui/data-table";
 
-export default function PermissionTable({ data, onDelete, onEdit, onDetail }: { data: Permission[], onDelete: (id: number) => void, onEdit: (isEdit: boolean, data: any) => void, onDetail: (id: number) => void }) {
-  return (
-    <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead className="border-b border-neutral-200 dark:border-neutral-700">
-          <tr>
-            <th className="px-6 py-3 text-left text-sm font-medium text-neutral-600 dark:text-neutral-400">
-              ID
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-neutral-600 dark:text-neutral-400">
-              Name
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-neutral-600 dark:text-neutral-400">
-              Guard
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-neutral-600 dark:text-neutral-400">
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
-          {data.map((permission: Permission, index: number) => (
-            <tr key={permission.id}>
-              <td className="px-6 py-4 text-sm text-neutral-800 dark:text-neutral-200">
-                {index + 1}
-              </td>
-              <td className="px-6 py-4 text-sm text-neutral-800 dark:text-neutral-200">
-                {permission.name}
-              </td>
-              <td className="px-6 py-4 text-sm text-neutral-800 dark:text-neutral-200">
-                {permission.guard}
-              </td>
-              <td className="px-6 py-4">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="cursor-pointer">
-                      <IconDots className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem
-                      onSelect={() => onDetail(permission.id)}
-                      className="cursor-pointer"
-                    >
-                      <IconEye className="w-4 h-4" /> Detail
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => onEdit(true, permission)}
-                      className="cursor-pointer"
-                    >
-                      <IconEdit className="w-4 h-4" /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => onDelete(permission.id)}
-                      className="cursor-pointer"
-                    >
-                      <IconTrash className="w-4 h-4" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  );
+export default function PermissionTable({
+  data,
+  onDelete,
+  onEdit,
+  onDetail,
+}: {
+  data: Permission[];
+  onDelete: (id: number) => void;
+  onEdit: (isEdit: boolean, data: any) => void;
+  onDetail: (id: number) => void;
+}) {
+  const columns: ColumnDef<Permission>[] = [
+    {
+      accessorKey: "id",
+      header: "No",
+      cell: ({ row }) => (
+        <div className="font-medium">{row.index + 1}</div>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="font-medium">{row.getValue("name")}</div>
+      ),
+    },
+    {
+      accessorKey: "guard",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Guard
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div>{row.getValue("guard")}</div>,
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const permission = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="cursor-pointer">
+                <IconDots className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                onSelect={() => onDetail(permission.id)}
+                className="cursor-pointer"
+              >
+                <IconEye className="w-4 h-4" /> Detail
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => onEdit(true, permission)}
+                className="cursor-pointer"
+              >
+                <IconEdit className="w-4 h-4" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => onDelete(permission.id)}
+                className="cursor-pointer"
+              >
+                <IconTrash className="w-4 h-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
+  return <DataTable columns={columns} data={data} searchKey="name" />;
 }
