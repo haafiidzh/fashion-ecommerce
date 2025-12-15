@@ -1,5 +1,4 @@
 import UserDetailPages from "@/components/pages/admin/users/user-detail-pages";
-import { usersApi } from "@/data/users";
 
 export default async function UserDetailPage({
   params,
