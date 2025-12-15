@@ -84,20 +84,12 @@ export default function UserDetailPages({ data }: { data: any }) {
             </p>
           </div>
         </div>
-        {/* <Button
-          variant="outline"
-          onClick={() => router.push(`/dashboard/users/${user.id}/edit`)}
-          className="cursor-pointer"
-        >
-          <IconEdit className="h-4 w-4 mr-2" />
-          Edit User
-        </Button> */}
       </div>
 
       {/* Profile Card */}
       <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-2xl font-bold text-white shadow-lg">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-purple-600 text-2xl font-bold text-white shadow-lg">
             {getInitials(user.username || "U")}
           </div>
           <div className="flex-1">
