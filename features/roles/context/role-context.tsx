@@ -64,7 +64,7 @@ const roleReducer = (state: RoleState, action: RoleAction): RoleState => {
 
 const RoleContext = createContext<{
   state: RoleState;
-  fetchRoles: (includeDeleted: boolean) => Promise<void>;
+  fetchRoles: () => Promise<void>;
   createRole: (data: Role) => Promise<void>;
   updateRole: (id: number, data: Role) => Promise<void>;
   deleteRole: (id: number) => Promise<void>;
