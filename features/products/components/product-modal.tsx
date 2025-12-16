@@ -34,13 +34,13 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({
-                                         isOpen,
-                                         onClose,
-                                         product,
-                                         onSubmit,
-                                         isLoading = false,
-                                         title
-                                     }: ProductModalProps) {
+    isOpen,
+    onClose,
+    product,
+    onSubmit,
+    isLoading = false,
+    title
+}: ProductModalProps) {
     const [formData, setFormData] = useState<ProductFormData>({
         category_id: 0,
         name: '',
