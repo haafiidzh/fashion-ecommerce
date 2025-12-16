@@ -16,7 +16,7 @@ const generateUniqueSlug = async (name: string): Promise<string> => {
     let slug = baseSlug;
     let counter = 1;
 
-    while (await prisma.products.findUnique({ where: { slug } })) {
+    while (await prisma.products.findFirst({ where: { slug } })) {
         slug = `${baseSlug}-${counter}`;
         counter++;
     }
