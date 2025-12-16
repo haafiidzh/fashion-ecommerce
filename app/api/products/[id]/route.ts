@@ -2,6 +2,28 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
+const generateSlug = (name: string): string => {
+    return name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+};
+
+const generateUniqueSlugForUpdate = async (name: string, excludeId: number): Promise<string> => {
+    const baseSlug = generateSlug(name);
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await prisma.products.findFirst({ where: { slug, id: { not: excludeId } } })) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+    }
+
+    return slug;
+};
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -61,10 +83,13 @@ export async function PUT(
             );
         }
 
+        const slug = await generateUniqueSlugForUpdate(name, productId);
+
         const updatedProduct = await prisma.products.update({
             where: { id: productId },
             data: {
                 name,
+                slug,
                 price: parseInt(price, 10),
                 category_id: parseInt(category_id, 10),
                 images: images || null,

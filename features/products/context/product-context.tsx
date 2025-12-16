@@ -94,6 +94,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
             const product = await productApi.createProduct(data);
             dispatch({ type: 'CREATE_PRODUCT_SUCCESS', payload: product });
             toast.success('Produk berhasil dibuat');
+            fetchProducts();
         } catch (error) {
             console.error('Failed to create product:', error);
             dispatch({ type: 'SET_ERROR', payload: 'Gagal membuat produk' });

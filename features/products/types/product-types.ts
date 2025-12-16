@@ -19,7 +19,7 @@ export interface Product {
 export interface ProductFormData {
     category_id: number;
     name: string;
-    slug?: string;
+    // slug?: string;
     price?: number;
     images?: ProductImage[];
 }

@@ -5,9 +5,23 @@ import { NextRequest } from "next/server";
 const generateSlug = (name: string): string => {
     return name
         .toLowerCase()
+        .trim()
         .replace(/[^a-z0-9 -]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-');
+};
+
+const generateUniqueSlug = async (name: string): Promise<string> => {
+    const baseSlug = generateSlug(name);
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await prisma.products.findUnique({ where: { slug } })) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+    }
+
+    return slug;
 };
 
 export async function GET() {
@@ -46,7 +60,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const slug = generateSlug(name);
+        const slug = await generateUniqueSlug(name);
 
         const newProduct = await prisma.products.create({
             data: {

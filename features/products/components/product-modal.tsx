@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Product, ProductFormData, ProductImage } from '@/features/products/types/product-types';
 import { Button } from "@/components/ui/button";
 import {
@@ -34,23 +34,24 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({
-    isOpen,
-    onClose,
-    product,
-    onSubmit,
-    isLoading = false,
-    title
-}: ProductModalProps) {
-    const [formData, setFormData] = useState<ProductFormData>({
+                                         isOpen,
+                                         onClose,
+                                         product,
+                                         onSubmit,
+                                         isLoading = false,
+                                         title
+                                     }: ProductModalProps) {
+    const [formData, setFormData] = useState<Omit<ProductFormData, 'slug'>>({
         category_id: 0,
         name: '',
-        slug: '',
         price: 0,
         images: []
     });
 
-    // State khusus untuk input harga dalam bentuk string
     const [priceInput, setPriceInput] = useState<string>('0');
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { state: categoryState } = useCategory();
     const { categories } = categoryState;
@@ -60,7 +61,6 @@ export default function ProductModal({
             setFormData({
                 category_id: product.category_id,
                 name: product.name,
-                slug: product.slug || '',
                 price: product.price || 0,
                 images: product.images || []
             });
@@ -69,12 +69,12 @@ export default function ProductModal({
             setFormData({
                 category_id: 0,
                 name: '',
-                slug: '',
                 price: 0,
                 images: []
             });
             setPriceInput('0');
         }
+        setUploadError(null);
     }, [product, isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -91,11 +91,14 @@ export default function ProductModal({
             setFormData({
                 category_id: 0,
                 name: '',
-                slug: '',
                 price: 0,
                 images: []
             });
             setPriceInput('0');
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            setUploadError(null);
         } catch (error) {
             console.error('Error submitting product:', error);
         }
@@ -107,22 +110,21 @@ export default function ProductModal({
             setFormData({
                 category_id: 0,
                 name: '',
-                slug: '',
                 price: 0,
                 images: []
             });
             setPriceInput('0');
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            setUploadError(null);
         }
     };
 
-    // Handler khusus untuk input harga
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-
-        // Hanya izinkan digit
         if (/^\d*$/.test(value)) {
             setPriceInput(value);
-            // Update formData dengan nilai number
             setFormData({
                 ...formData,
                 price: parseInt(value, 10) || 0
@@ -136,14 +138,17 @@ export default function ProductModal({
         const files = Array.from(e.target.files);
         const newImages: ProductImage[] = [];
 
+        setIsUploading(true);
+        setUploadError(null);
+
         try {
             for (const file of files) {
-                const formData = new FormData();
-                formData.append('file', file);
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', file);
 
                 const response = await fetch('/api/upload', {
                     method: 'POST',
-                    body: formData
+                    body: uploadFormData
                 });
 
                 const data = await response.json();
@@ -158,21 +163,24 @@ export default function ProductModal({
                 }
             }
 
-            setFormData({
-                ...formData,
-                images: [...(formData.images || []), ...newImages]
-            });
+            setFormData(prev => ({
+                ...prev,
+                images: [...(prev.images || []), ...newImages]
+            }));
         } catch (error) {
             console.error('Error uploading image:', error);
+            setUploadError('Gagal mengunggah gambar');
             toast.error('Gagal mengunggah gambar');
+        } finally {
+            setIsUploading(false);
         }
     };
 
     const handleRemoveImage = (imageId: string) => {
-        setFormData({
-            ...formData,
-            images: formData.images?.filter(img => img.id !== imageId) || []
-        });
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images?.filter(img => img.id !== imageId) || []
+        }));
     };
 
     return (
@@ -212,32 +220,26 @@ export default function ProductModal({
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="name" className="text-right">
-                                Name
-                            </Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="col-span-3"
-                                placeholder="Enter product name"
-                                autoFocus
-                                required
-                            />
+                        <div className="grid grid-cols-4 items-start gap-4">
+                            <div className="text-right">
+                                <Label htmlFor="name" className="">
+                                    Name
+                                </Label>
+                                <p className="text-xs text-gray-500 mt-1">Slug akan dibuat otomatis</p>
+                            </div>
+                            <div className="col-span-3 space-y-2">
+                                <Input
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full"
+                                    placeholder="Enter product name"
+                                    autoFocus
+                                    required
+                                />
+                            </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="slug" className="text-right">
-                                Slug
-                            </Label>
-                            <Input
-                                id="slug"
-                                value={formData.slug}
-                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                className="col-span-3"
-                                placeholder="Enter product slug"
-                            />
-                        </div>
+
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="price" className="text-right">
                                 Price
@@ -268,6 +270,7 @@ export default function ProductModal({
                                             <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                                         </div>
                                         <input
+                                            ref={fileInputRef}
                                             id="images"
                                             type="file"
                                             className="hidden"
@@ -276,6 +279,12 @@ export default function ProductModal({
                                         />
                                     </label>
                                 </div>
+
+                                {uploadError && (
+                                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                                        {uploadError}
+                                    </div>
+                                )}
 
                                 {formData.images && formData.images.length > 0 && (
                                     <div className="grid grid-cols-3 gap-2 mt-2">
@@ -311,7 +320,7 @@ export default function ProductModal({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={isLoading || !formData.name.trim() || !formData.category_id}
+                            disabled={isLoading || !formData.name.trim() || !formData.category_id || isUploading || uploadError !== null}
                         >
                             {isLoading ? 'Saving...' : (product ? 'Update' : 'Create')}
                         </Button>
