@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react';
 import { Category, CategoryFormData } from '@/features/categories/types/category-types';
 import { CategoryModalView } from './category-modal.view';
@@ -5,7 +7,7 @@ import { CategoryModalView } from './category-modal.view';
 interface CategoryModalContainerProps {
     isOpen: boolean;
     onClose: () => void;
-    category?: Category | null;
+    category: Category | null;
     onSubmit: (data: CategoryFormData) => Promise<void>;
     isLoading?: boolean;
 }

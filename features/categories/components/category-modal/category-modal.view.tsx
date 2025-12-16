@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import { Category, CategoryFormData } from '@/features/categories/types/category-types';
 import { Button } from "@/components/ui/button";
