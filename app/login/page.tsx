@@ -34,7 +34,7 @@ export default function LoginPage() {
         throw new Error(result.error);
       }
 
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     },
   });
