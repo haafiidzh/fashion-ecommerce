@@ -37,9 +37,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
-        const { name, price, category_id } = await request.json();
+        const { name, price, category_id, images } = await request.json();
 
-        if (!name || !price || !category_id) {
+        if (!name || price === undefined || !category_id) {
             return NextResponse.json(
                 { error: "Name, price, and category_id are required" },
                 { status: 400 }
@@ -52,8 +52,9 @@ export async function POST(request: NextRequest) {
             data: {
                 name,
                 slug,
-                price,
+                price: parseInt(price, 10),
                 category_id: parseInt(category_id, 10),
+                images: images || null,
             },
             include: {
                 product_category: {

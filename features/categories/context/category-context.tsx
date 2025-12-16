@@ -56,13 +56,17 @@ const CategoryContext = createContext<{
     deleteCategory: (id: number) => Promise<void>;
 }>({
     state: initialState,
-    fetchCategories: async () => {},
-    createCategory: async () => {},
-    updateCategory: async () => {},
-    deleteCategory: async () => {},
+    fetchCategories: async () => { },
+    createCategory: async () => { },
+    updateCategory: async () => { },
+    deleteCategory: async () => { },
 });
 
-export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+type CategoryProviderProps = {
+    children: ReactNode;
+};
+export function CategoryProvider({ children }: CategoryProviderProps) {
+    // export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [state, dispatch] = useReducer(categoryReducer, initialState);
 
     const fetchCategories = async () => {

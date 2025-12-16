@@ -1,26 +1,40 @@
-import { Product, ProductFormData } from '../types/product-types';
-import { productApi } from '@/data/products';
+import apiClient from '@/lib/api-client';
+import { Product, ProductFormData } from '@/features/products/types/product-types';
 
-class ProductService {
-    async getProducts(): Promise<Product[]> {
-        return productApi.getProducts();
-    }
+export const productApi = {
+    getProducts: async (): Promise<Product[]> => {
+        const response = await apiClient.get('/products');
+        return response.data;
+    },
 
-    async getProductById(id: number): Promise<Product | null> {
-        return productApi.getProductById(id);
-    }
+    getProductById: async (id: number): Promise<Product> => {
+        const response = await apiClient.get(`/products/${id}`);
+        return response.data;
+    },
 
-    async createProduct(data: ProductFormData): Promise<Product> {
-        return productApi.createProduct(data);
-    }
+    createProduct: async (data: ProductFormData): Promise<Product> => {
+        const { name, price, category_id, images } = data;
+        const response = await apiClient.post('/products', {
+            name,
+            price: price?.toString(),
+            category_id,
+            images
+        });
+        return response.data;
+    },
 
-    async updateProduct(id: number, data: Partial<ProductFormData>): Promise<Product> {
-        return productApi.updateProduct(id, data);
-    }
+    updateProduct: async (id: number, data: ProductFormData): Promise<Product> => {
+        const { name, price, category_id, images } = data;
+        const response = await apiClient.put(`/products/${id}`, {
+            name,
+            price: price?.toString(),
+            category_id,
+            images
+        });
+        return response.data;
+    },
 
-    async deleteProduct(id: number): Promise<void> {
-        return productApi.deleteProduct(id);
-    }
-}
-
-export default new ProductService();
+    deleteProduct: async (id: number): Promise<void> => {
+        await apiClient.delete(`/products/${id}`);
+    },
+};

@@ -5,11 +5,12 @@ export interface Product {
     category_id: number;
     name: string;
     slug?: string;
-    price?: string;
+    price?: number;
+    images?: ProductImage[];
     created_at: string;
     updated_at: string;
     deleted_at?: string | null;
-    category?: {
+    product_category?: {
         id: number;
         name: string;
     };
@@ -19,7 +20,8 @@ export interface ProductFormData {
     category_id: number;
     name: string;
     slug?: string;
-    price?: string;
+    price?: number;
+    images?: ProductImage[];
 }
 
 export interface ProductState {
@@ -33,4 +35,11 @@ export interface ProductColumn {
     header: string;
     accessorKey?: string;
     cell?: (props: any) => React.ReactNode;
+}
+
+export interface ProductImage {
+    id: string;
+    url: string;
+    public_id: string;
+    alt?: string;
 }
