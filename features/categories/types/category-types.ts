@@ -13,6 +13,7 @@ export interface CategoryFormData {
 export interface CategoryState {
     categories: Category[];
     loading: boolean;
+    error: string | null
 }
 
 export interface CategoryColumn {

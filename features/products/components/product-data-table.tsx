@@ -18,22 +18,23 @@ import { DataTable } from "@/components/ui/data-table"
 interface ProductDataTableProps {
     data: Product[]
     onEdit: (product: Product) => void
+    onEditWithError?: (product: Product) => void
     onDelete: (id: number) => void
     onView: (id: number) => void
 }
 
-export default function ProductDataTable({ data, onEdit, onDelete, onView }: ProductDataTableProps) {
+export default function ProductDataTable({ data, onEdit, onEditWithError, onDelete, onView }: ProductDataTableProps) {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString()
     }
 
-    const formatPrice = (price?: string) => {
+    const formatPrice = (price?: number) => {
         if (!price) return 'N/A';
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
             minimumFractionDigits: 0
-        }).format(parseInt(price));
+        }).format((price));
     }
 
     const columns: ColumnDef<Product>[] = [
@@ -62,11 +63,11 @@ export default function ProductDataTable({ data, onEdit, onDelete, onView }: Pro
             },
         },
         {
-            accessorKey: "category.name",
+            accessorKey: "product_category.name",
             header: "Category",
             cell: ({ row }) => {
                 const product = row.original
-                return <div className="font-medium">{product.category?.name || 'N/A'}</div>
+                return <div className="font-medium">{product.product_category?.name || 'N/A'}</div>
             },
         },
         {
@@ -129,6 +130,15 @@ export default function ProductDataTable({ data, onEdit, onDelete, onView }: Pro
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit product
                             </DropdownMenuItem>
+                            {onEditWithError && (
+                                <DropdownMenuItem
+                                    onClick={() => onEditWithError(product)}
+                                    className="text-orange-600"
+                                >
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit (Test Error)
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                                 onClick={() => onDelete(product.id)}
                                 className="text-red-600"
