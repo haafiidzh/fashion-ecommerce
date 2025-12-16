@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 const initialState: CategoryState = {
     categories: [],
     loading: false,
+    error: null,
 };
 
 type CategoryAction =
@@ -69,7 +70,6 @@ const CategoryContext = createContext<{
     createCategory: async () => { },
     updateCategory: async () => { },
     deleteCategory: async () => { },
-    clearError: () => { },
 });
 
 type CategoryProviderProps = {
