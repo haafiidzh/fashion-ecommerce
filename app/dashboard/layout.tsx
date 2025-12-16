@@ -10,6 +10,7 @@ import {
   IconLogout,
   IconShield,
   IconLock,
+  IconUserCircle,
 } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -101,7 +102,7 @@ export default function DashboardLayout({
             <SidebarLink
               link={{
                 label: session?.user?.name || "User",
-                href: "#",
+                href: "/dashboard/profile",
                 icon: (
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
                     <span className="text-xs font-medium">
