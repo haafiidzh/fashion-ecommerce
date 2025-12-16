@@ -36,6 +36,11 @@ yarn-error.log*
 
 # prisma
 prisma/migrations/*
+.env
+.env.local
+
+# prisma
+prisma/migrations/*
 
 # vercel
 .vercel
@@ -46,4 +51,4 @@ next-env.d.ts
 
 /app/generated/prisma
 pnpm-lock.yaml
-idea/
+.idea/

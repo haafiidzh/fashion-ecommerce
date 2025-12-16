@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { productApi } from '@/data/products';
+import { productApi } from '../services/product-service';
 import { Product, ProductState, ProductFormData } from '../types/product-types';
+import { toast } from 'sonner';
 
 const initialState: ProductState = {
     products: [],
@@ -11,40 +12,29 @@ const initialState: ProductState = {
 };
 
 type ProductAction =
-    | { type: 'FETCH_PRODUCTS_REQUEST' }
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_ERROR'; payload: string | null }
     | { type: 'FETCH_PRODUCTS_SUCCESS'; payload: Product[] }
-    | { type: 'FETCH_PRODUCTS_FAILURE'; payload: string }
-    | { type: 'CREATE_PRODUCT_REQUEST' }
     | { type: 'CREATE_PRODUCT_SUCCESS'; payload: Product }
-    | { type: 'CREATE_PRODUCT_FAILURE'; payload: string }
-    | { type: 'UPDATE_PRODUCT_REQUEST' }
     | { type: 'UPDATE_PRODUCT_SUCCESS'; payload: Product }
-    | { type: 'UPDATE_PRODUCT_FAILURE'; payload: string }
-    | { type: 'DELETE_PRODUCT_REQUEST' }
     | { type: 'DELETE_PRODUCT_SUCCESS'; payload: number }
-    | { type: 'DELETE_PRODUCT_FAILURE'; payload: string }
-    | { type: 'CLEAR_ERROR' };
+    | { type: 'RESET_STATE' };
 
 const productReducer = (state: ProductState, action: ProductAction): ProductState => {
     switch (action.type) {
-        case 'FETCH_PRODUCTS_REQUEST':
-            return { ...state, loading: true, error: null };
+        case 'SET_LOADING':
+            return { ...state, loading: action.payload };
+        case 'SET_ERROR':
+            return { ...state, error: action.payload, loading: false };
         case 'FETCH_PRODUCTS_SUCCESS':
-            return { ...state, loading: false, products: action.payload };
-        case 'FETCH_PRODUCTS_FAILURE':
-            return { ...state, loading: false, error: action.payload };
-        case 'CREATE_PRODUCT_REQUEST':
-            return { ...state, loading: true, error: null };
+            return { ...state, loading: false, products: action.payload, error: null };
         case 'CREATE_PRODUCT_SUCCESS':
             return {
                 ...state,
                 loading: false,
                 products: [...state.products, action.payload],
+                error: null,
             };
-        case 'CREATE_PRODUCT_FAILURE':
-            return { ...state, loading: false, error: action.payload };
-        case 'UPDATE_PRODUCT_REQUEST':
-            return { ...state, loading: true, error: null };
         case 'UPDATE_PRODUCT_SUCCESS':
             return {
                 ...state,
@@ -52,21 +42,17 @@ const productReducer = (state: ProductState, action: ProductAction): ProductStat
                 products: state.products.map((product) =>
                     product.id === action.payload.id ? action.payload : product
                 ),
+                error: null,
             };
-        case 'UPDATE_PRODUCT_FAILURE':
-            return { ...state, loading: false, error: action.payload };
-        case 'DELETE_PRODUCT_REQUEST':
-            return { ...state, loading: true, error: null };
         case 'DELETE_PRODUCT_SUCCESS':
             return {
                 ...state,
                 loading: false,
                 products: state.products.filter((product) => product.id !== action.payload),
+                error: null,
             };
-        case 'DELETE_PRODUCT_FAILURE':
-            return { ...state, loading: false, error: action.payload };
-        case 'CLEAR_ERROR':
-            return { ...state, error: null };
+        case 'RESET_STATE':
+            return { ...initialState };
         default:
             return state;
     }
@@ -81,70 +67,70 @@ const ProductContext = createContext<{
     clearError: () => void;
 }>({
     state: initialState,
-    fetchProducts: async () => {},
-    createProduct: async () => {},
-    updateProduct: async () => {},
-    deleteProduct: async () => {},
-    clearError: () => {},
+    fetchProducts: async () => { },
+    createProduct: async () => { },
+    updateProduct: async () => { },
+    deleteProduct: async () => { },
+    clearError: () => { },
 });
 
-export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ProductProvider = ({ children }: { children: ReactNode }) => {
     const [state, dispatch] = useReducer(productReducer, initialState);
 
     const fetchProducts = async () => {
-        dispatch({ type: 'FETCH_PRODUCTS_REQUEST' });
+        dispatch({ type: 'SET_LOADING', payload: true });
         try {
             const products = await productApi.getProducts();
             dispatch({ type: 'FETCH_PRODUCTS_SUCCESS', payload: products });
         } catch (error) {
-            dispatch({
-                type: 'FETCH_PRODUCTS_FAILURE',
-                payload: error instanceof Error ? error.message : 'An unknown error occurred',
-            });
+            console.error('Failed to fetch products:', error);
+            dispatch({ type: 'SET_ERROR', payload: 'Gagal memuat produk' });
+            toast.error('Gagal memuat produk');
         }
     };
 
     const createProduct = async (data: ProductFormData) => {
-        dispatch({ type: 'CREATE_PRODUCT_REQUEST' });
         try {
             const product = await productApi.createProduct(data);
             dispatch({ type: 'CREATE_PRODUCT_SUCCESS', payload: product });
+            toast.success('Produk berhasil dibuat');
+            fetchProducts();
         } catch (error) {
-            dispatch({
-                type: 'CREATE_PRODUCT_FAILURE',
-                payload: error instanceof Error ? error.message : 'An unknown error occurred',
-            });
+            console.error('Failed to create product:', error);
+            dispatch({ type: 'SET_ERROR', payload: 'Gagal membuat produk' });
+            toast.error('Gagal membuat produk');
+            throw error;
         }
     };
 
     const updateProduct = async (id: number, data: ProductFormData) => {
-        dispatch({ type: 'UPDATE_PRODUCT_REQUEST' });
         try {
             const product = await productApi.updateProduct(id, data);
             dispatch({ type: 'UPDATE_PRODUCT_SUCCESS', payload: product });
+            toast.success('Produk berhasil diperbarui');
         } catch (error) {
-            dispatch({
-                type: 'UPDATE_PRODUCT_FAILURE',
-                payload: error instanceof Error ? error.message : 'An unknown error occurred',
-            });
+            console.error('Failed to update product:', error);
+            dispatch({ type: 'SET_ERROR', payload: 'Gagal memperbarui produk' });
+            toast.error('Gagal memperbarui produk');
+            throw error;
         }
     };
 
     const deleteProduct = async (id: number) => {
-        dispatch({ type: 'DELETE_PRODUCT_REQUEST' });
         try {
             await productApi.deleteProduct(id);
             dispatch({ type: 'DELETE_PRODUCT_SUCCESS', payload: id });
+            toast.success('Produk berhasil dihapus');
         } catch (error) {
-            dispatch({
-                type: 'DELETE_PRODUCT_FAILURE',
-                payload: error instanceof Error ? error.message : 'An unknown error occurred',
-            });
+            console.error('Failed to delete product:', error);
+            dispatch({ type: 'SET_ERROR', payload: 'Gagal menghapus produk' });
+            toast.error('Gagal menghapus produk');
+            throw error;
         }
     };
 
     const clearError = () => {
-        dispatch({ type: 'CLEAR_ERROR' });
+        dispatch({ type: 'SET_ERROR', payload: null });
     };
 
     useEffect(() => {

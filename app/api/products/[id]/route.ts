@@ -1,63 +1,155 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NextRequest } from "next/server";
+
+const generateSlug = (name: string): string => {
+    return name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+};
+
+const generateUniqueSlugForUpdate = async (name: string, excludeId: number): Promise<string> => {
+    const baseSlug = generateSlug(name);
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await prisma.products.findFirst({ where: { slug, id: { not: excludeId } } })) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+    }
+
+    return slug;
+};
 
 export async function GET(
-    request: Request,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const category = await prisma.product_category.findUnique({
-            where: { id: parseInt(params.id) },
-        });
+        const { id } = await params;
+        const productId = parseInt(id);
 
-        if (!category) {
-            return NextResponse.json({ error: "Category not found" }, { status: 404 });
+        if (isNaN(productId)) {
+            return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
         }
 
-        return NextResponse.json(category);
+        const product = await prisma.products.findUnique({
+            where: {
+                id: productId,
+                deleted_at: null,
+            },
+            include: {
+                product_category: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+
+        if (!product) {
+            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        }
+
+        return NextResponse.json(product);
     } catch (error) {
-        console.error(`Failed to fetch category ${params.id}:`, error);
-        return NextResponse.json({ error: "Failed to fetch category" }, { status: 500 });
+        console.error(`Failed to fetch product:`, error);
+        return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 });
     }
 }
 
 export async function PUT(
-    request: Request,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { name } = await request.json();
-        const id = parseInt(params.id);
+        const { id } = await params;
+        const productId = parseInt(id);
 
-        if (!name) {
-            return NextResponse.json({ error: "Category name is required" }, { status: 400 });
+        if (isNaN(productId)) {
+            return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
         }
 
-        const updatedCategory = await prisma.product_category.update({
-            where: { id },
-            data: { name },
+        const { name, price, category_id, images } = await request.json();
+
+        if (!name || price === undefined || !category_id) {
+            return NextResponse.json(
+                { error: "Name, price, and category_id are required" },
+                { status: 400 }
+            );
+        }
+
+        const slug = await generateUniqueSlugForUpdate(name, productId);
+
+        const updatedProduct = await prisma.products.update({
+            where: { id: productId },
+            data: {
+                name,
+                slug,
+                price: parseInt(price, 10),
+                category_id: parseInt(category_id, 10),
+                images: images || null,
+            },
+            include: {
+                product_category: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
         });
 
-        return NextResponse.json(updatedCategory);
-    } catch (error) {
-        console.error(`Failed to update category ${params.id}:`, error);
-        return NextResponse.json({ error: "Failed to update category" }, { status: 500 });
+        return NextResponse.json(updatedProduct);
+    } catch (error: any) {
+        console.error(`Failed to update product:`, error);
+
+        if (error.code === 'P2025') {
+            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        }
+
+        if (error.code === 'P2003') {
+            return NextResponse.json(
+                { error: "Invalid category_id. Category does not exist." },
+                { status: 400 }
+            );
+        }
+
+        return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
     }
 }
 
 export async function DELETE(
-    request: Request,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = parseInt(params.id);
-        await prisma.product_category.delete({
-            where: { id },
+        const { id } = await params;
+        const productId = parseInt(id);
+
+        if (isNaN(productId)) {
+            return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
+        }
+
+        await prisma.products.update({
+            where: { id: productId },
+            data: {
+                deleted_at: new Date(),
+            },
         });
 
-        return NextResponse.json({ message: "Category deleted successfully" });
-    } catch (error) {
-        console.error(`Failed to delete category ${params.id}:`, error);
-        return NextResponse.json({ error: "Failed to delete category" }, { status: 500 });
+        return NextResponse.json({ message: "Product deleted successfully" });
+    } catch (error: any) {
+        console.error(`Failed to delete product:`, error);
+
+        if (error.code === 'P2025') {
+            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        }
+
+        return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
     }
 }
