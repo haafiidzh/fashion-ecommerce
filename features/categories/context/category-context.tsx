@@ -4,6 +4,7 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { categoryApi } from '@/features/categories/services/category-service';
 import { Category, CategoryState, CategoryFormData } from '../types/category-types';
 import { toast } from 'sonner';
+import { usePathname } from 'next/navigation';
 
 const initialState: CategoryState = {
     categories: [],
@@ -76,18 +77,24 @@ type CategoryProviderProps = {
     children: ReactNode;
 };
 
-export function CategoryProvider({ children }: CategoryProviderProps) {
+export const CategoryProvider = ({ children }: CategoryProviderProps) => {
     const [state, dispatch] = useReducer(categoryReducer, initialState);
 
+    const path = usePathname();
     const fetchCategories = async () => {
         dispatch({ type: 'SET_LOADING', payload: true });
         try {
             const categories = await categoryApi.getCategories();
             dispatch({ type: 'FETCH_CATEGORIES_SUCCESS', payload: categories });
+            if (path === "/dashboard/categories") {
+                toast.success("Success to fetch categories");
+            }
         } catch (error) {
             console.error('Failed to fetch categories:', error);
-            dispatch({ type: 'SET_ERROR', payload: 'Gagal memuat kategori' });
-            toast.error('Gagal memuat kategori');
+            dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch categories' });
+            if (path === "/dashboard/categories") {
+                toast.error("Failed to fetch categories");
+            }
         }
     };
 

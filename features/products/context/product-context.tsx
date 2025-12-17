@@ -4,6 +4,7 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { productApi } from '../services/product-service';
 import { Product, ProductState, ProductFormData } from '../types/product-types';
 import { toast } from 'sonner';
+import { usePathname } from 'next/navigation';
 
 const initialState: ProductState = {
     products: [],
@@ -77,15 +78,21 @@ const ProductContext = createContext<{
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
     const [state, dispatch] = useReducer(productReducer, initialState);
 
+    const path = usePathname();
     const fetchProducts = async () => {
         dispatch({ type: 'SET_LOADING', payload: true });
         try {
             const products = await productApi.getProducts();
             dispatch({ type: 'FETCH_PRODUCTS_SUCCESS', payload: products });
+            if (path === "/dashboard/products") {
+                toast.success("Success to fetch products");
+            }
         } catch (error) {
             console.error('Failed to fetch products:', error);
-            dispatch({ type: 'SET_ERROR', payload: 'Gagal memuat produk' });
-            toast.error('Gagal memuat produk');
+            dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch products' });
+            if (path === "/dashboard/products") {
+                toast.error("Failed to fetch products");
+            }
         }
     };
 

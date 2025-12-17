@@ -10,6 +10,7 @@ import React, {
 import { User, UserState } from "../types/user-types";
 import { usersApi } from "../services/user-sevice";
 import { toast } from "sonner";
+import { usePathname } from "next/navigation";
 
 const initialState: UserState = {
   users: [],
@@ -76,11 +77,10 @@ export const UserContext = createContext<{
   deleteUser: async () => {},
 });
 
-export const UserProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
 
+  const path = usePathname();
   const fetchUsers = async () => {
     dispatch({ type: "FETCH_USERS_REQUEST" });
     try {
@@ -90,7 +90,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         type: "FETCH_USERS_SUCCESS",
         payload: usersArray,
       });
-      // toast.success("Success to fetch users");
+
+      if (path === "/dashboard/users") {
+        toast.success("Success to fetch users");
+      }
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error("Failed to get users");

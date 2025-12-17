@@ -1,153 +1,142 @@
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
-import { hash } from "bcrypt";
-import { Gender } from "@/app/generated/prisma/enums";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    if (!id) {
-      throw new Error("ID is required");
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { id } = await params;
+    const userId = parseInt(id);
+
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
+
     const user = await prisma.users.findUnique({
-      where: { id: parseInt(id) },
-    });
-    if (!user) {
-      throw new Error("User not found");
-    }
-    return NextResponse.json({
-      success: true,
-      message: "User fetched successfully",
-      data: user,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "An unknown error occurred",
-        data: null,
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        phone: true,
+        pob: true,
+        dob: true,
+        gender: true,
+        email_verified_at: true,
+        created_at: true,
+        updated_at: true,
+        user_roles: {
+          select: {
+            roles: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
       },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Transform the data
+    const transformedUser = {
+      ...user,
+      roles: user.user_roles.map((ur) => ({ name: ur.roles.name })),
+      user_roles: undefined,
+    };
+
+    return NextResponse.json(transformedUser);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
+    const userId = parseInt(id);
 
-    if (!id) {
-      throw new Error(`ID is required`);
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
 
-    const {
-      username,
-      email,
-      password,
-      phone,
-      dob,
-      pob,
-      gender,
-    }: {
-      username: string;
-      email: string;
-      password: string;
-      phone: string;
-      dob: string;
-      pob: string;
-      gender: Gender;
-    } = await request.json();
-    
-    const user = await prisma.users.findFirst({
-      where: { id: parseInt(id), deleted_at: null },
-    });
+    const body = await request.json();
+    const { username, email, phone, gender, pob, dob } = body;
 
-    if (!user) {
-      throw new Error("User not found");
-    }
+    console.log("Update data:", { username, email, phone, gender, pob, dob });
 
-    const updated = await prisma.users.update({
-      where: { id: user.id },
+    // Update user
+    const updatedUser = await prisma.users.update({
+      where: { id: userId },
       data: {
-        username: username,
-        email: email,
-        password: await hash(password, 10),
-        phone: phone,
-        gender: gender,
-        dob: new Date(dob),
-        pob: pob,
-        updated_at: new Date(),
+        username,
+        email,
+        phone: phone || null,
+        gender: gender || null,
+        pob: pob || null,
+        dob: dob ? new Date(dob) : null,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        phone: true,
+        pob: true,
+        dob: true,
+        gender: true,
+        email_verified_at: true,
+        created_at: true,
+        updated_at: true,
+        user_roles: {
+          select: {
+            roles: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    if (!updated) {
-      throw new Error("User not updated");
-    }
+    // Transform the data
+    const transformedUser = {
+      ...updatedUser,
+      roles: updatedUser.user_roles.map((ur) => ({ name: ur.roles.name })),
+      user_roles: undefined,
+    };
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "User updated successfully",
-        data: updated,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json(transformedUser);
   } catch (error) {
+    console.error("Error updating user:", error);
     return NextResponse.json(
-      {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "An unknown error occurred",
-        data: null,
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = await params;
-    if (!id) {
-      throw new Error("ID is required");
-    }
-    const user = await prisma.users.findFirst({
-      where: { id: parseInt(id), deleted_at: null },
-    });
-    if (!user) {
-      throw new Error("User not found");
-    }
-    const deleted = await prisma.users.update({
-      where: { id: user.id },
-      data: {
-        deleted_at: new Date(),
-      },
-    });
-    if (!deleted) {
-      throw new Error("User not deleted");
-    }
-    return NextResponse.json({
-      success: true,
-      message: "User deleted successfully",
-      data: deleted,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "An unknown error occurred",
-        data: null,
-      },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
