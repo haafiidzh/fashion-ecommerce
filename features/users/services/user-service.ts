@@ -3,6 +3,7 @@ import { User } from "../types/user-types";
 
 export const usersData = async (): Promise<User[]> => {
   const response = await apiClient.get("/users");
+  console.log("response", response.data.data);
   return response.data?.data || [];
 };
 
@@ -73,7 +74,7 @@ export const usersApi = {
     const response = await apiClient.delete(`/users/${userId}`);
 
     const res = response.data;
-    if (!res || !res.success || !res.data) {
+    if (!res || !res.success) {
       throw new Error(res?.message || "Error deleting user");
     }
   },
