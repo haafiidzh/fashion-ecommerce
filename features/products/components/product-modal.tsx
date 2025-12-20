@@ -55,7 +55,8 @@ export default function ProductModal({
 
     const { state: categoryState } = useCategory();
     const { categories } = categoryState;
-
+    console.log("categories");
+    console.log(categories);
     useEffect(() => {
         if (product) {
             setFormData({
