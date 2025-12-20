@@ -12,14 +12,28 @@ export async function GET(
     }
     const role = await prisma.roles.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        role_permissions: {
+          include: {
+            permissions: true,
+          },
+        },
+      },
     });
     if (!role) {
       throw new Error("Role not found");
     }
+    
+    // Format data untuk mengembalikan permissions sebagai array of IDs
+    const formattedRole = {
+      ...role,
+      permissions: role.role_permissions.map((rp) => rp.permission_id),
+    };
+    
     return NextResponse.json({
       success: true,
       message: "Role found",
-      data: role,
+      data: formattedRole,
     });
   } catch (error) {
     return NextResponse.json(
@@ -43,19 +57,54 @@ export async function PUT(
     if (!id) {
       throw new Error("ID is required");
     }
-    const { name, guard } = await request.json();
+    const { name, guard, permissions } = await request.json();
+    
+    // Update role data
     const role = await prisma.roles.update({
       where: { id: parseInt(id) },
       data: { name, guard },
     });
+    
     if (!role) {
       throw new Error("Role not found");
     }
+    
+    if (permissions && Array.isArray(permissions)) {
+      await prisma.role_permissions.deleteMany({
+        where: { role_id: parseInt(id) },
+      });
+      
+      if (permissions.length > 0) {
+        await prisma.role_permissions.createMany({
+          data: permissions.map((permissionId: number) => ({
+            role_id: parseInt(id),
+            permission_id: permissionId,
+          })),
+        });
+      }
+    }
+    
+    const updatedRole = await prisma.roles.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        role_permissions: {
+          include: {
+            permissions: true,
+          },
+        },
+      },
+    });
+    
+    const formattedRole = updatedRole ? {
+      ...updatedRole,
+      permissions: updatedRole.role_permissions.map((rp) => rp.permission_id),
+    } : role;
+    
     return NextResponse.json(
       {
         success: true,
         message: "Role updated successfully",
-        data: role,
+        data: formattedRole,
       },
       { status: 200 }
     );

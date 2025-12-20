@@ -1,17 +1,41 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { hash } from "bcrypt";
+import { User } from "@/features/users/types/user-types";
 
 export const GET = async (request: Request) => {
   try {
-    const users = await prisma.users.findMany();
+    const users = await prisma.users.findMany({
+      include: {
+        user_roles: {
+          include: {
+            roles: true,
+          },
+        },
+      },
+    });
     if (!users) {
       throw new Error("Fetching users failed");
     }
+    
+    const transformedUsers = users.map((user) => ({
+      ...user,
+      password: "",
+      phone: user.phone || "",
+      pob: user.pob || "",
+      roles: user.user_roles?.map((ur) => ({
+        id: ur.roles.id,
+        name: ur.roles.name,
+        guard: ur.roles.guard || "",
+        created_at: ur.roles.created_at,
+        updated_at: ur.roles.updated_at,
+      })) || [],
+    })) as User[];
+    
     return NextResponse.json({
       success: true,
       message: "Users fetched successfully",
-      data: users,
+      data: transformedUsers,
     });
   } catch (error) {
     return NextResponse.json(

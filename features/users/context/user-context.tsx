@@ -8,7 +8,7 @@ import React, {
   useReducer,
 } from "react";
 import { User, UserState } from "../types/user-types";
-import { usersApi } from "../services/user-sevice";
+import { usersApi } from "../services/user-service";
 import { toast } from "sonner";
 import { usePathname } from "next/navigation";
 
@@ -66,7 +66,7 @@ const userReducer = (state: UserState, action: UserAction): UserState => {
 export const UserContext = createContext<{
   state: UserState;
   fetchUsers: (includeDeleted: boolean) => Promise<void>;
-  createUser: (data: User) => Promise<void>;
+  createUser: (data: User) => Promise<User | void>;
   updateUser: (id: number, data: User) => Promise<void>;
   deleteUser: (id: number) => Promise<void>;
 }>({
@@ -113,9 +113,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         payload: user,
       });
       toast.success("Success to create user");
+      return user;
     } catch (error) {
       console.error("Failed to create user:", error);
       toast.error("Failed to create user");
+      throw error;
     }
   };
 
