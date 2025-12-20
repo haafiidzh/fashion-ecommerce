@@ -12,6 +12,8 @@ import { IconDots, IconEdit, IconEye, IconTrash } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
+import { Role } from "@/features/roles/types/role-types";
+import { Badge } from "@/components/ui/badge";
 
 export default function UserTable({
   data,
@@ -68,11 +70,11 @@ export default function UserTable({
       cell: ({ row }) => <div>{row.getValue("email")}</div>,
     },
     {
-      accessorKey: "gender",
-      header: "Gender",
+      accessorKey: "roles",
+      header: "Role",
       cell: ({ row }) => {
-        const gender = row.getValue("gender") as string;
-        return <div>{gender === "male" ? "Male" : "Female"}</div>;
+        const roles = row.getValue("roles") as Role[];
+        return <div>{roles?.map((role) => <Badge key={role.id}>{role.name}</Badge>)}</div>;
       },
     },
     {

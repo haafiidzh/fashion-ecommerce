@@ -4,13 +4,16 @@ import UserTable from "./user-table";
 import { useUser } from "../context/user-context";
 import { IconPlus } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UserForm from "./user-form";
 import { useRouter } from "next/navigation";
+import { useRole } from "@/features/roles/context/role-context";
 
 export default function UserList() {
-  const { state, createUser, updateUser, deleteUser } = useUser();
-  const { users, loading } = state;
+  const { state: userState, createUser, updateUser, deleteUser } = useUser();
+  const { state: roleState, assignRoleToUser, fetchRoles } = useRole();
+  const { users, loading: userLoading } = userState;
+  const { roles, loading: roleLoading } = roleState;
   const [edit, setEdit] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const router = useRouter();
@@ -22,9 +25,16 @@ export default function UserList() {
     setSelectedUser(data);
   };
 
-  const handleSubmitAdd = (data: any) => {
-    createUser(data);
-    setOpen(false);
+  const handleSubmitAdd = async (data: any) => {
+    try {
+      const user = await createUser(data);
+      if (user) {
+        await assignRoleToUser(user.id, data.role);
+      }
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to create user:", error);
+    }
   }
 
   const handleSubmitEdit = (id: number, data: any) => {
@@ -57,7 +67,7 @@ export default function UserList() {
         </Button>
       </div>
 
-      {loading ? (
+      {userLoading || roleLoading ? (
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>

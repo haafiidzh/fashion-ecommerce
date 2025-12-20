@@ -23,6 +23,7 @@ import { Gender } from "@/app/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
+import { useRole } from "@/features/roles/context/role-context";
 
 const UserForm = ({
   isEdit,
@@ -40,6 +41,7 @@ const UserForm = ({
   onEdit: (id: number, data: any) => void;
 }) => {
   const form = useForm<{
+    role: number;
     username: string;
     email: string;
     password: string;
@@ -49,6 +51,7 @@ const UserForm = ({
     pob: string;
   }>({
     defaultValues: {
+      role: 1,
       username: "",
       email: "",
       password: "",
@@ -59,6 +62,8 @@ const UserForm = ({
     },
   });
 
+  const { state: roleState } = useRole();
+  const { roles, loading } = roleState;
   const [showPassword, setShowPassword] = useState(false);
 
   const formatDateForInput = (date: Date | string | null | undefined): string => {
@@ -75,6 +80,7 @@ const UserForm = ({
     if (open) {
       if (isEdit && selectedUserData) {
         form.reset({
+          role: selectedUserData.role || 1,
           username: selectedUserData.username || "",
           email: selectedUserData.email || "",
           password: "",
@@ -85,6 +91,7 @@ const UserForm = ({
         });
       } else {
         form.reset({
+          role: undefined,
           username: "",
           email: "",
           password: "",
@@ -106,6 +113,27 @@ const UserForm = ({
         </DialogHeader>
         <form onSubmit={form.handleSubmit(isEdit && selectedUserData ? (data) => onEdit(selectedUserData.id, data) : onSubmit)}>
           <div className="flex flex-col gap-2">
+          <Controller
+              name="role"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field aria-invalid={fieldState.invalid}>
+                  <FieldLabel>Role</FieldLabel>
+
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Role" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem value={role.id.toString()}>{role.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+            />
             <Controller
               name="username"
               control={form.control}
