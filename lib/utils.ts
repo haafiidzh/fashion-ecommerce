@@ -11,3 +11,7 @@ export function formatDate(dateString: string): string {
 export function formatDateTime(dateString: string): string {
   return new Date(dateString).toLocaleString();
 }
+
+export function currencyFormat(value: number): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+}

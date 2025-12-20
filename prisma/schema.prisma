@@ -204,6 +204,7 @@ model cart_items {
   id         Int      @id @default(autoincrement())
   cart_id    Int
   product_id Int
+  quantity   Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
