@@ -3,7 +3,7 @@
 import BreadcrumbCart from "@/features/cart/components/BreadcrumbCart";
 import ProductCard from "@/features/cart/components/ProductCart";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, currencyFormat } from "@/lib/utils";
 import { integralCF } from "@/styles/fonts";
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
@@ -95,22 +95,8 @@ export default function CartPage() {
               <div className="flex flex-col space-y-5">
                 <div className="flex items-center justify-between">
                   <span className="md:text-xl text-black/60">Subtotal</span>
-                  <span className="md:text-xl font-bold">${totalPrice.toFixed(2)}</span>
+                  <span className="md:text-xl font-bold">{currencyFormat(totalPrice)}</span>
                 </div>
-                {totalPrice !== adjustedTotalPrice && (
-                  <div className="flex items-center justify-between">
-                    <span className="md:text-xl text-black/60">
-                      Discount (-
-                      {Math.round(
-                        ((totalPrice - adjustedTotalPrice) / totalPrice) * 100
-                      )}
-                      %)
-                    </span>
-                    <span className="md:text-xl font-bold text-red-600">
-                      -${(totalPrice - adjustedTotalPrice).toFixed(2)}
-                    </span>
-                  </div>
-                )}
                 <div className="flex items-center justify-between">
                   <span className="md:text-xl text-black/60">
                     Delivery Fee
@@ -121,7 +107,7 @@ export default function CartPage() {
                 <div className="flex items-center justify-between">
                   <span className="md:text-xl text-black">Total</span>
                   <span className="text-xl md:text-2xl font-bold">
-                    ${adjustedTotalPrice.toFixed(2)}
+                    {currencyFormat(adjustedTotalPrice)}
                   </span>
                 </div>
               </div>

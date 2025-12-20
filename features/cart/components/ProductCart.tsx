@@ -8,6 +8,7 @@ import CartCounter from "@/features/cart/components/CartCounter";
 import { Button } from "@/components/ui/button";
 import { useCart } from "../context/cart-context";
 import { CartItem } from "../types/cart-types";
+import { currencyFormat } from "@/lib/utils";
 
 type ProductCardProps = {
   data: CartItem;
@@ -99,7 +100,7 @@ const ProductCard = ({ data, userId }: ProductCardProps) => {
         <div className="flex items-center flex-wrap justify-between mt-auto">
           <div className="flex items-center space-x-[5px] xl:space-x-2.5">
             <span className="font-bold text-black text-xl xl:text-2xl">
-              ${productPrice}
+              {currencyFormat(productPrice)}
             </span>
           </div>
           <CartCounter
