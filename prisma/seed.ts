@@ -66,7 +66,11 @@ async function main() {
     });
     console.log('✓ Variants seeded');
 
-    const imageUrl = 'https://res.cloudinary.com/dr79rpzsv/image/upload/v1765980449/download_ibraug.jpg';
+    // Define two Cloudinary images
+    const imageUrls = [
+        'https://res.cloudinary.com/dr79rpzsv/image/upload/v1765980449/download_ibraug.jpg',
+        'https://res.cloudinary.com/dr79rpzsv/image/upload/v1765980450/sample_dj0hkp.jpg'
+    ];
 
     // Seed Products - Kaos
     const kaosProducts = await prisma.products.createMany({
@@ -76,21 +80,21 @@ async function main() {
                 name: 'Kaos Polos Premium Cotton',
                 slug: 'kaos-polos-premium-cotton',
                 price: 85000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Kaos'],
                 name: 'Kaos Oversize Streetwear',
                 slug: 'kaos-oversize-streetwear',
                 price: 120000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Kaos'],
                 name: 'Kaos V-Neck Basic',
                 slug: 'kaos-v-neck-basic',
                 price: 75000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
         ],
     });
@@ -103,21 +107,21 @@ async function main() {
                 name: 'Kemeja Flanel Kotak-kotak',
                 slug: 'kemeja-flanel-kotak-kotak',
                 price: 150000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Kemeja'],
                 name: 'Kemeja Formal Slim Fit',
                 slug: 'kemeja-formal-slim-fit',
                 price: 200000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Kemeja'],
                 name: 'Kemeja Denim Casual',
                 slug: 'kemeja-denim-casual',
                 price: 180000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
         ],
     });
@@ -130,21 +134,21 @@ async function main() {
                 name: 'Celana Jeans Slim Fit',
                 slug: 'celana-jeans-slim-fit',
                 price: 250000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Celana'],
                 name: 'Celana Chino Premium',
                 slug: 'celana-chino-premium',
                 price: 220000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Celana'],
                 name: 'Celana Cargo Tactical',
                 slug: 'celana-cargo-tactical',
                 price: 280000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
         ],
     });
@@ -157,21 +161,21 @@ async function main() {
                 name: 'Jaket Bomber Pilot',
                 slug: 'jaket-bomber-pilot',
                 price: 350000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Jaket'],
                 name: 'Jaket Hoodie Zipper',
                 slug: 'jaket-hoodie-zipper',
                 price: 200000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Jaket'],
                 name: 'Jaket Jeans Denim',
                 slug: 'jaket-jeans-denim',
                 price: 300000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
         ],
     });
@@ -184,21 +188,21 @@ async function main() {
                 name: 'Dress Floral Maxi',
                 slug: 'dress-floral-maxi',
                 price: 320000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Dress'],
                 name: 'Dress Midi Elegant',
                 slug: 'dress-midi-elegant',
                 price: 280000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Dress'],
                 name: 'Dress Mini Party',
                 slug: 'dress-mini-party',
                 price: 250000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
         ],
     });
@@ -211,14 +215,14 @@ async function main() {
                 name: 'Rok Plisket Midi',
                 slug: 'rok-plisket-midi',
                 price: 150000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Rok'],
                 name: 'Rok A-Line Casual',
                 slug: 'rok-a-line-casual',
                 price: 130000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
         ],
     });
@@ -231,21 +235,21 @@ async function main() {
                 name: 'Sneakers Canvas Classic',
                 slug: 'sneakers-canvas-classic',
                 price: 280000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Sepatu'],
                 name: 'Sepatu Boots Kulit',
                 slug: 'sepatu-boots-kulit',
                 price: 450000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Sepatu'],
                 name: 'Slip On Casual',
                 slug: 'slip-on-casual',
                 price: 200000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
         ],
     });
@@ -258,28 +262,28 @@ async function main() {
                 name: 'Topi Baseball Cap',
                 slug: 'topi-baseball-cap',
                 price: 75000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Aksesoris'],
                 name: 'Tas Ransel Canvas',
                 slug: 'tas-ransel-canvas',
                 price: 180000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Aksesoris'],
                 name: 'Ikat Pinggang Kulit',
                 slug: 'ikat-pinggang-kulit',
                 price: 120000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
             {
                 category_id: categoryMap['Aksesoris'],
                 name: 'Dompet Pria Minimalis',
                 slug: 'dompet-pria-minimalis',
                 price: 150000,
-                images: JSON.stringify([imageUrl]),
+                images: JSON.stringify(imageUrls),
             },
         ],
     });

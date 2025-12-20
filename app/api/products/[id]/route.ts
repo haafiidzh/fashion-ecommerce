@@ -55,7 +55,38 @@ export async function GET(
             return NextResponse.json({ error: "Product not found" }, { status: 404 });
         }
 
-        return NextResponse.json(product);
+        let normalizedImages: any[] = [];
+
+        if (product.images && typeof product.images === 'string') {
+            try {
+                const parsedImages = JSON.parse(product.images);
+
+                if (Array.isArray(parsedImages) && parsedImages.length > 0 && typeof parsedImages[0] === 'string') {
+                    normalizedImages = parsedImages.map((url, index) => ({
+                        id: `img-${index}`,
+                        url: url,
+                        alt: product.name || 'Product image',
+                        public_id: `img-${index}`,
+                    }));
+                }
+
+                else if (Array.isArray(parsedImages)) {
+                    normalizedImages = parsedImages;
+                }
+            } catch (error) {
+                console.error("Failed to parse images JSON for product", product.id, error);
+                normalizedImages = [];
+            }
+        }
+        else if (Array.isArray(product.images)) {
+            normalizedImages = product.images;
+        }
+        const responseProduct = {
+            ...product,
+            images: normalizedImages,
+        };
+
+        return NextResponse.json(responseProduct);
     } catch (error) {
         console.error(`Failed to fetch product:`, error);
         return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 });
