@@ -10,6 +10,7 @@ import React, {
 import { Role, RoleState } from "../types/role-types";
 import { rolesApi } from "../services/role-service";
 import { toast } from "sonner";
+import { usePathname } from "next/navigation";
 
 const initialState: RoleState = {
   roles: [],
@@ -21,7 +22,9 @@ type RoleAction =
   | { type: "FETCH_ROLES_SUCCESS"; payload: Role[] }
   | { type: "CREATE_ROLE_SUCCESS"; payload: Role }
   | { type: "UPDATE_ROLE_SUCCESS"; payload: Role }
-  | { type: "DELETE_ROLE_SUCCESS"; payload: number };
+  | { type: "DELETE_ROLE_SUCCESS"; payload: number }
+  | { type: "ASSIGN_ROLE_TO_USER_SUCCESS"; payload: { userId: number; roleId: number } }
+  | { type: "REMOVE_ROLE_FROM_USER_SUCCESS"; payload: { userId: number; roleId: number } };
 
 const roleReducer = (state: RoleState, action: RoleAction): RoleState => {
   switch (action.type) {
@@ -68,19 +71,21 @@ const RoleContext = createContext<{
   createRole: (data: Role) => Promise<void>;
   updateRole: (id: number, data: Role) => Promise<void>;
   deleteRole: (id: number) => Promise<void>;
+  assignRoleToUser: (userId: number, roleId: number) => Promise<void>;
 }>({
   state: initialState,
   fetchRoles: async () => {},
   createRole: async () => {},
   updateRole: async () => {},
   deleteRole: async () => {},
+  assignRoleToUser: async () => {},
 });
 
 export const RoleProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [state, dispatch] = useReducer(roleReducer, initialState);
-
+  const path = usePathname();
   const fetchRoles = async () => {
     dispatch({ type: "FETCH_ROLES_REQUEST" });
     try {
@@ -90,6 +95,9 @@ export const RoleProvider: React.FC<{ children: ReactNode }> = ({
         type: "FETCH_ROLES_SUCCESS",
         payload: rolesArray,
       });
+      if (path === "/dashboard/roles") {
+        toast.success("Success to fetch roles");
+      }
     } catch (error) {
       console.error("Failed to fetch roles:", error);
       toast.error("Failed to get roles");
@@ -146,6 +154,17 @@ export const RoleProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const assignRoleToUser = async (userId: number, roleId: number) => {
+    dispatch({ type: "ASSIGN_ROLE_TO_USER_SUCCESS", payload: { userId, roleId } });
+    try {
+      await rolesApi.assignRoleToUser(userId, roleId);
+    } catch (error) {
+      console.error("Failed to assign role to user:", error);
+      toast.error("Failed to assign role to user");
+    }
+    toast.success("Success to assign role to user");
+  };
+
   useEffect(() => {
     fetchRoles();
   }, []);
@@ -158,6 +177,7 @@ export const RoleProvider: React.FC<{ children: ReactNode }> = ({
         createRole,
         updateRole,
         deleteRole,
+        assignRoleToUser,
       }}
     >
       {children}

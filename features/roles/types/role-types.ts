@@ -2,8 +2,8 @@ export interface Role {
     id: number;
     name: string;
     guard: string;
-    created_at: string;
-    updated_at: string;
+    created_at: Date;
+    updated_at: Date;
 }
   
 export interface RoleState {

@@ -7,14 +7,17 @@ import { useRole } from "../context/role-context";
 import RoleTable from "./role-table";
 import { useRouter } from "next/navigation";
 import RoleForm from "./role-form";
+import { usePermission } from "@/features/permissions/context/permission-context";
 
 export default function RoleList() {
   const { state, createRole, updateRole, deleteRole } = useRole();
-  const { roles, loading } = state;
+  const { roles, loading: roleLoading } = state;
   const [edit, setEdit] = useState(false);
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { state: permissionState } = usePermission();
+  const { permissions, loading: permissionLoading } = permissionState;
 
   const handleOpenDialog = (isEdit: boolean, data: any) => {
     setEdit(isEdit);
@@ -57,7 +60,7 @@ export default function RoleList() {
         </Button>
       </div>
 
-      {loading ? (
+      {roleLoading || permissionLoading ? (
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
@@ -71,6 +74,7 @@ export default function RoleList() {
       )}
 
       <RoleForm
+        permissions={permissions}
         isEdit={edit}
         open={open}
         setOpen={() => setOpen(false)}
