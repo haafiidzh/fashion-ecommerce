@@ -1,16 +1,16 @@
 "use client";
 
-import BreadcrumbCart from "@/features/cart/components/BreadcrumbCart";
 import ProductCard from "@/features/cart/components/ProductCart";
 import { Button } from "@/components/ui/button";
 import { cn, currencyFormat } from "@/lib/utils";
 import { integralCF } from "@/styles/fonts";
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
-import { IconBasket, IconDiscount } from "@tabler/icons-react";
+import { IconBasket } from "@tabler/icons-react";
 import { useCart } from "@/features/cart/context/cart-context";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { CustomerLayout } from "@/components/layout";
 
 export default function CartPage() {
   const { data: session, status } = useSession();
@@ -51,24 +51,23 @@ export default function CartPage() {
 
   if (status === "loading" || loading) {
     return (
-      <main className="pb-20">
+      <CustomerLayout breadcrumbs={[{ label: "Cart" }]}>
         <div className="max-w-frame mx-auto px-4 xl:px-0">
           <div className="flex justify-center items-center mt-32">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         </div>
-      </main>
+      </CustomerLayout>
     );
   }
 
   return (
-    <main className="p-20">
-      <div className="max-w-frame mx-auto px-4 xl:px-0">
-        <BreadcrumbCart />
+    <CustomerLayout breadcrumbs={[{ label: "Cart" }]}>
+      <div className="max-w-frame mx-auto px-4 xl:px-0 py-8">
         <h2
           className={cn([
             integralCF.className,
-            "font-bold text-[32px] md:text-[40px] text-black uppercase mb-5 md:mb-6",
+            "font-bold text-[32px] md:text-[40px] uppercase mb-5 md:mb-6",
           ])}
         >
           your cart
@@ -129,6 +128,6 @@ export default function CartPage() {
           </div>
         )}
       </div>
-    </main>
+    </CustomerLayout>
   );
 }
