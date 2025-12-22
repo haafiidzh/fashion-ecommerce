@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { ShoppingCart, User, Menu, X, Search } from "lucide-react";
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: session } = useSession();
+  const { session, getDashboardUrl } = useUserRole();
 
   return (
     <header className="w-full border-b border-black/10 bg-white">
@@ -81,8 +81,9 @@ export default function Header() {
             {/* User Menu */}
             {session ? (
               <Link
-                href="/dashboard"
+                href={getDashboardUrl()}
                 className="p-1.5 hover:bg-black/5 rounded-full transition-colors"
+                title={session.user.name || "Profile"}
               >
                 <User className="h-5 w-5 text-black" />
               </Link>
