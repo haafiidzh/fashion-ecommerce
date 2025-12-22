@@ -5,10 +5,10 @@ import Brands from "@/features/landing/Brands";
 import ProductListSec from "@/features/products/components/product-list-sec";
 import DressStyle from "@/features/landing/DressStyle";
 import Reviews from "@/features/landing/Reviews";
-import { ProductProvider, useProduct } from "@/features/products/context/product-context";
-import { CategoryProvider } from "@/features/categories/context/category-context";
+import { useProduct } from "@/features/products/context/product-context";
 import { Review } from "@/types/review.types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PublicLayout } from "@/components/layout";
 
 const reviewsData: Review[] = [
     { id: 1, user: "Sarah M.", content: "Kualitas produk sangat bagus dan pengiriman cepat! Sangat puas dengan belanja di sini.", rating: 5, date: "2023-10-27" },
@@ -24,18 +24,18 @@ function LandingPageContent() {
 
     if (productState.loading) {
         return (
-            <>
+            <PublicLayout>
                 <Header />
                 <Brands />
-                <main className="my-[50px] sm:my-[72px]">
+                <div className="my-[50px] sm:my-[72px]">
                     <div className="max-w-frame mx-auto px-4 xl:px-0">
                         <Skeleton className="h-12 w-1/3 mx-auto mb-8" />
                         <div className="flex space-x-4 overflow-hidden">
                             {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-[400px] w-[295px] flex-shrink-0 rounded-xl" />)}
                         </div>
                     </div>
-                </main>
-            </>
+                </div>
+            </PublicLayout>
         );
     }
 
@@ -46,10 +46,10 @@ function LandingPageContent() {
     const topSellingData = allProducts.slice(8, 16);
 
     return (
-        <>
+        <PublicLayout>
             <Header />
             <Brands />
-            <main className="my-[50px] sm:my-[72px]">
+            <div className="my-[50px] sm:my-[72px]">
                 <ProductListSec
                     title="NEW ARRIVALS"
                     data={newArrivalsData}
@@ -69,8 +69,8 @@ function LandingPageContent() {
                     <DressStyle />
                 </div>
                 <Reviews data={reviewsData} />
-            </main>
-        </>
+            </div>
+        </PublicLayout>
     );
 }
 
