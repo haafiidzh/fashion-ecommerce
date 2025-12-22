@@ -49,7 +49,7 @@ function LandingPageContent() {
         <PublicLayout>
             <Header />
             <Brands />
-            <div className="my-[50px] sm:my-[72px]">
+            <div className="my-[50px] sm:my-[72px] px-10 md:px-20">
                 <ProductListSec
                     title="NEW ARRIVALS"
                     data={newArrivalsData}

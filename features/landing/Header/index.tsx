@@ -9,9 +9,9 @@ import * as motion from "framer-motion/client";
 
 const Header = () => {
   return (
-    <header className="bg-[#F2F0F1] pt-10 md:pt-24 overflow-hidden">
+    <header className="bg-[#F2F0F1] pt-10 md:pt-24 overflow-hidden md:px-20">
       <div className="md:max-w-frame mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
-        <section className="max-w-frame px-4">
+        <section className="max-w-frame px-10 md:px-0">
           <motion.h2
             initial={{ y: "100px", opacity: 0, rotate: 10 }}
             whileInView={{ y: "0", opacity: 1, rotate: 0 }}

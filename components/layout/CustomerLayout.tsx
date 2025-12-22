@@ -18,7 +18,7 @@ export default function CustomerLayout({ children, breadcrumbs }: CustomerLayout
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 px-5 py-10 md:p-20">
         {breadcrumbs && breadcrumbs.length > 0 && (
           <div className="max-w-frame mx-auto px-4 xl:px-0">
             <Breadcrumbs items={breadcrumbs} />
