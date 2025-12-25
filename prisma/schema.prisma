@@ -38,6 +38,7 @@ model users {
   pob               String?
   dob               DateTime?
   gender            Gender?
+  photo_profile     String?
   email_verified_at DateTime?
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
@@ -47,6 +48,7 @@ model users {
   orders     orders[]
   carts      carts?
   user_roles user_roles[]
+  reviews    reviews[]
 }
 
 model addresses {
@@ -139,6 +141,7 @@ model products {
   product_variants product_variants[]
   order_items      order_items[]
   cart_items       cart_items[]
+  review_details   review_details[]
 }
 
 model product_variants {
@@ -163,6 +166,7 @@ model orders {
   users        users         @relation(fields: [user_id], references: [id])
   order_items  order_items[]
   transactions transactions?
+  reviews      reviews[]
 }
 
 model order_items {
@@ -183,6 +187,7 @@ model transactions {
   order_id           Int                @unique
   payment_method     Int?
   total_amount       BigInt
+  tracking_number    String? @default(cuid())
   transaction_status TransactionStatus?
   created_at         DateTime           @default(now())
   updated_at         DateTime           @updatedAt
@@ -209,5 +214,30 @@ model cart_items {
   updated_at DateTime @updatedAt
 
   carts    carts    @relation(fields: [cart_id], references: [id])
+  products products @relation(fields: [product_id], references: [id])
+}
+
+model reviews {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  order_id   Int
+  value      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  users        users          @relation(fields: [user_id], references: [id])
+  orders       orders         @relation(fields: [order_id], references: [id])
+  review_details review_details[]
+}
+
+model review_details {
+  id         Int      @id @default(autoincrement())
+  review_id  Int
+  product_id Int
+  star       Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  reviews  reviews  @relation(fields: [review_id], references: [id])
   products products @relation(fields: [product_id], references: [id])
 }
