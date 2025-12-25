@@ -1,9 +1,7 @@
-"use client";
-
 import Link from "next/link";
-import { useParams } from "next/navigation";
-
-type OrderStatus = "pending" | "processing" | "shipped" | "completed" | "cancelled";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { OrderStatus } from "@/app/generated/prisma/client";
 
 type OrderDetail = {
   id: string;
@@ -36,106 +34,101 @@ type OrderDetail = {
   transaction?: {
     id: string;
     method: string;
-    status: "pending" | "success" | "failed";
+    status: "pending" | "success";
+    tracking_number?: string;
   };
 };
 
-const DUMMY_ORDERS: Record<string, OrderDetail> = {
-  "ORD-1001": {
-    id: "ORD-1001",
-    status: "pending",
-    createdAt: "2025-12-14 09:12",
-    customer: { name: "Athala Naufal Pratama", email: "athala@example.com", phone: "0812-1111-2222" },
-    shipping: {
-      address: "Jl. Sudirman No. 10, Jakarta Selatan, DKI Jakarta 12190",
-      note: "Tolong bungkus rapi ya",
-      courier: "JNE REG",
-    },
-    items: [
-      { sku: "TSHIRT-001", name: "Basic Tee", variant: "Black / M", qty: 1, price: 199000 },
-      { sku: "PANTS-014", name: "Chino Pants", variant: "Khaki / 32", qty: 1, price: 399000 },
-      { sku: "CAP-002", name: "Logo Cap", variant: "Navy", qty: 1, price: 150000 },
-    ],
-    totals: {
-      subtotal: 748000,
-      shipping: 25000,
-      discount: 0,
-      grandTotal: 773000,
-    },
-    transaction: { id: "TX-9004", method: "COD", status: "pending" },
-  },
-  "ORD-1002": {
-    id: "ORD-1002",
-    status: "processing",
-    createdAt: "2025-12-14 10:03",
-    customer: { name: "Haifdz", email: "haifdz@example.com", phone: "0813-8888-9999" },
-    shipping: {
-      address: "Jl. Asia Afrika No. 1, Bandung, Jawa Barat 40111",
-      courier: "SiCepat BEST",
-      trackingNo: "SICEPAT-ABCD-1234",
-    },
-    items: [{ sku: "HOODIE-007", name: "Oversized Hoodie", variant: "Grey / L", qty: 1, price: 399000 }],
-    totals: {
-      subtotal: 399000,
-      shipping: 20000,
-      discount: 20000,
-      grandTotal: 399000,
-    },
-    transaction: { id: "TX-9003", method: "QRIS", status: "failed" },
-  },
-  "ORD-1003": {
-    id: "ORD-1003",
-    status: "shipped",
-    createdAt: "2025-12-14 11:40",
-    customer: { name: "Iqmal", email: "iqmal@example.com", phone: "0812-3333-4444" },
-    shipping: {
-      address: "Jl. Tunjungan No. 20, Surabaya, Jawa Timur 60275",
-      courier: "J&T EZ",
-      trackingNo: "JNT-9922-8811",
-    },
-    items: [
-      { sku: "SHOES-021", name: "Sneakers", variant: "White / 42", qty: 1, price: 650000 },
-      { sku: "SOCK-003", name: "Crew Socks", variant: "White", qty: 2, price: 120000 },
-    ],
-    totals: {
-      subtotal: 890000,
-      shipping: 0,
-      discount: 0,
-      grandTotal: 890000,
-    },
-    transaction: { id: "TX-9002", method: "Stripe Card", status: "pending" },
-  },
-  "ORD-1004": {
-    id: "ORD-1004",
-    status: "completed",
-    createdAt: "2025-12-13 16:18",
-    customer: { name: "Eko", email: "eko@example.com", phone: "0812-5555-6666" },
-    shipping: {
-      address: "Jl. Malioboro No. 5, Yogyakarta, DI Yogyakarta 55271",
-      courier: "AnterAja Same Day",
-      trackingNo: "AA-7733-1122",
-    },
-    items: [
-      { sku: "DRESS-010", name: "Summer Dress", variant: "Floral / M", qty: 1, price: 550000 },
-      { sku: "BAG-004", name: "Mini Sling Bag", variant: "Brown", qty: 1, price: 350000 },
-      { sku: "SANDAL-006", name: "Strap Sandals", variant: "Beige / 39", qty: 1, price: 450000 },
-      { sku: "ACCESS-011", name: "Hair Clip Set", variant: "Gold", qty: 1, price: 150000 },
-      { sku: "TOP-018", name: "Ribbed Top", variant: "Cream / M", qty: 1, price: 250000 },
-    ],
-    totals: {
-      subtotal: 1750000,
-      shipping: 40000,
-      discount: 0,
-      grandTotal: 1790000,
-    },
-    transaction: { id: "TX-9001", method: "VA BCA", status: "success" },
-  },
-};
+async function getOrderDetail(orderId: string): Promise<OrderDetail | null> {
+  try {
+    let order = await prisma.orders.findFirst({
+      where: { order_uuid: orderId },
+      include: {
+        users: true,
+        order_items: {
+          include: {
+            products: true
+          }
+        },
+        transactions: true
+      }
+    });
 
-export default function OrderDetailPage() {
-  const params = useParams<{ id: string }>();
-  const id = decodeURIComponent(params.id);
-  const order = DUMMY_ORDERS[id];
+    if (!order) {
+      const numericId = parseInt(orderId);
+      if (!isNaN(numericId)) {
+        order = await prisma.orders.findUnique({
+          where: { id: numericId },
+          include: {
+            users: true,
+            order_items: {
+              include: {
+                products: true
+              }
+            },
+            transactions: true
+          }
+        });
+      }
+    }
+
+    if (!order) return null;
+    const addressString = "Jl. Sudirman No. 10, Jakarta Selatan, DKI Jakarta 12190";
+
+    return {
+      id: order.order_uuid,
+      status: order.status || "pending",
+      createdAt: order.created_at.toLocaleString('id-ID', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      customer: {
+        name: order.users.username,
+        email: order.users.email || "",
+        phone: order.users.phone || ""
+      },
+      shipping: {
+        address: addressString,
+        note: order.note || undefined,
+        courier: "JNE REG", 
+        trackingNo: order.transactions?.tracking_number || undefined
+      },
+      items: order.order_items.map(item => ({
+        sku: `SKU-${item.product_id}`,
+        name: item.name,
+        variant: undefined, 
+        qty: 1,
+        price: Number(item.amount)
+      })),
+      totals: {
+        subtotal: Number(order.total_amount),
+        shipping: 25000, 
+        discount: 0,
+        grandTotal: Number(order.total_amount) + 25000
+      },
+      transaction: order.transactions ? {
+        id: `TX-${order.transactions.id}`,
+        method: order.transactions.payment_method?.toString() || "Unknown",
+        status: order.transactions.transaction_status || "pending",
+        tracking_number: order.transactions.tracking_number || undefined
+      } : undefined
+    };
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    return null;
+  }
+}
+
+export default async function OrderDetailPage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params;
+  const order = await getOrderDetail(id);
 
   if (!order) {
     return (
@@ -145,7 +138,7 @@ export default function OrderDetailPage() {
             Order tidak ditemukan
           </h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Dummy data hanya tersedia untuk ORD-1001 sampai ORD-1004.
+            Order with ID {id} not found in database.
           </p>
           <div className="mt-4">
             <Link className="text-sm text-blue-600 hover:underline dark:text-blue-400" href="/dashboard/orders">
@@ -194,6 +187,7 @@ export default function OrderDetailPage() {
           <Card title="Payment">
             <KeyValue label="Transaction" value={order.transaction ? order.transaction.id : "-"} />
             <KeyValue label="Method" value={order.transaction ? order.transaction.method : "-"} />
+            <KeyValue label="Tracking Number" value={order.transaction?.tracking_number || "-"} />
             <KeyValue
               label="Status"
               value={

@@ -1,89 +1,87 @@
-"use client";
-
 import Link from "next/link";
-import { useParams } from "next/navigation";
-
-type TxStatus = "pending" | "success" | "failed";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
 type TxDetail = {
   id: string;
   orderId: string;
   method: string;
   amount: number;
-  status: TxStatus;
+  status: "pending" | "success";
   createdAt: string;
   paidAt?: string;
+  tracking_number?: string;
   metadata: Record<string, string>;
 };
 
-const DUMMY_TXS: Record<string, TxDetail> = {
-  "TX-9001": {
-    id: "TX-9001",
-    orderId: "ORD-1004",
-    method: "VA BCA",
-    amount: 2150000,
-    status: "success",
-    createdAt: "2025-12-13 16:19",
-    paidAt: "2025-12-13 16:20",
-    metadata: {
-      bank: "BCA",
-      vaNumber: "3901 1234 5678 9012",
-      reference: "BCA-REF-778812",
-    },
-  },
-  "TX-9002": {
-    id: "TX-9002",
-    orderId: "ORD-1003",
-    method: "Stripe Card",
-    amount: 890000,
-    status: "pending",
-    createdAt: "2025-12-14 11:41",
-    metadata: {
-      cardBrand: "VISA",
-      last4: "4242",
-      intentId: "pi_3Qxx_dummy",
-    },
-  },
-  "TX-9003": {
-    id: "TX-9003",
-    orderId: "ORD-1002",
-    method: "QRIS",
-    amount: 399000,
-    status: "failed",
-    createdAt: "2025-12-14 10:04",
-    metadata: {
-      provider: "Midtrans",
-      reason: "Expired",
-      qrisRef: "QR-20251214-001",
-    },
-  },
-  "TX-9004": {
-    id: "TX-9004",
-    orderId: "ORD-1001",
-    method: "COD",
-    amount: 1250000,
-    status: "pending",
-    createdAt: "2025-12-14 09:13",
-    metadata: {
-      note: "Bayar saat barang diterima",
-    },
-  },
-};
+async function getTransactionDetail(txId: string): Promise<TxDetail | null> {
+  try {
+    const cleanId = txId.replace(/^TX-/, '');
+    const numericId = parseInt(cleanId);
 
-export default function TransactionDetailPage() {
-  const params = useParams<{ id: string }>();
-  const id = decodeURIComponent(params.id);
-  const tx = DUMMY_TXS[id];
+    if (isNaN(numericId)) return null;
 
-  if (!tx) {
+    const transaction = await prisma.transactions.findUnique({
+      where: { id: numericId },
+      include: {
+        orders: true
+      }
+    });
+
+    if (!transaction) return null;
+
+    return {
+      id: `TX-${transaction.id}`,
+      orderId: transaction.orders.order_uuid,
+      method: transaction.payment_method?.toString() || "Unknown",
+      amount: Number(transaction.total_amount),
+      status: transaction.transaction_status || "pending",
+      createdAt: transaction.created_at.toLocaleString('id-ID', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      paidAt: transaction.transaction_status === "success" ?
+        transaction.created_at.toLocaleString('id-ID', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : undefined,
+      tracking_number: transaction.tracking_number || undefined,
+      metadata: {
+        order_uuid: transaction.orders.order_uuid,
+        total_amount: transaction.total_amount.toString(),
+        payment_method: transaction.payment_method?.toString() || "Unknown",
+        tracking_number: transaction.tracking_number || "Not available"
+      }
+    };
+  } catch (error) {
+    console.error("Error fetching transaction:", error);
+    return null;
+  }
+}
+
+export default async function TransactionDetailPage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params;
+  const transaction = await getTransactionDetail(id);
+
+  if (!transaction) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
           <h1 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">
-            Transaction tidak ditemukan
+            Transaction not found
           </h1>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Dummy data hanya tersedia untuk TX-9001 sampai TX-9004.
+            Transaction with ID {id} not found in database.
           </p>
           <div className="mt-4">
             <Link
@@ -107,11 +105,11 @@ export default function TransactionDetailPage() {
               Transaction Detail
             </h1>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              {tx.id} • dibuat {tx.createdAt}
+              {transaction.id} • dibuat {transaction.createdAt}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <TxStatusBadge status={tx.status} />
+            <TxStatusBadge status={transaction.status} />
             <Link
               className="text-sm text-blue-600 hover:underline dark:text-blue-400"
               href="/dashboard/transactions"
@@ -123,17 +121,17 @@ export default function TransactionDetailPage() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card title="Summary">
-            <KeyValue label="Amount" value={formatIDR(tx.amount)} />
-            <KeyValue label="Method" value={tx.method} />
-            <KeyValue label="Paid At" value={tx.paidAt ?? "-"} />
+            <KeyValue label="Amount" value={formatIDR(transaction.amount)} />
+            <KeyValue label="Method" value={transaction.method} />
+            <KeyValue label="Paid At" value={transaction.paidAt ?? "-"} />
           </Card>
 
           <Card title="Order">
-            <KeyValue label="Order ID" value={tx.orderId} />
+            <KeyValue label="Order ID" value={transaction.orderId} />
             <div className="mt-3">
               <Link
                 className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-                href={`/dashboard/orders/${encodeURIComponent(tx.orderId)}`}
+                href={`/dashboard/orders/${encodeURIComponent(transaction.orderId)}`}
               >
                 Lihat order detail →
               </Link>
@@ -141,7 +139,7 @@ export default function TransactionDetailPage() {
           </Card>
 
           <Card title="Metadata">
-            {Object.entries(tx.metadata).map(([k, v]) => (
+            {Object.entries(transaction.metadata).map(([k, v]) => (
               <KeyValue key={k} label={k} value={v} />
             ))}
           </Card>
@@ -179,19 +177,17 @@ function formatIDR(amount: number) {
   }).format(amount);
 }
 
-function TxStatusBadge({ status }: { status: TxStatus }) {
-  const styles: Record<TxStatus, string> = {
+function TxStatusBadge({ status }: { status: "pending" | "success" }) {
+  const styles: Record<"pending" | "success", string> = {
     pending:
       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200",
     success:
       "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200",
-    failed: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200",
   };
 
-  const label: Record<TxStatus, string> = {
+  const label: Record<"pending" | "success", string> = {
     pending: "Pending",
     success: "Success",
-    failed: "Failed",
   };
 
   return (

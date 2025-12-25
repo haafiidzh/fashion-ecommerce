@@ -1,58 +1,41 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useOrders } from "@/features/orders/hooks/use-orders";
 
 type OrderStatus = "pending" | "processing" | "shipped" | "completed" | "cancelled";
 
 export default function OrdersPages() {
-  const orders = [
-    {
-      id: "ORD-1001",
-      customer: "Athala Naufal Pratama",
-      items: 3,
-      total: 1250000,
-      status: "pending" as const,
-      createdAt: "2025-12-14 09:12",
-    },
-    {
-      id: "ORD-1002",
-      customer: "Haifdz",
-      items: 1,
-      total: 399000,
-      status: "processing" as const,
-      createdAt: "2025-12-14 10:03",
-    },
-    {
-      id: "ORD-1003",
-      customer: "Iqmal",
-      items: 2,
-      total: 890000,
-      status: "shipped" as const,
-      createdAt: "2025-12-14 11:40",
-    },
-    {
-      id: "ORD-1004",
-      customer: "Eko",
-      items: 5,
-      total: 2150000,
-      status: "completed" as const,
-      createdAt: "2025-12-13 16:18",
-    },
-  ];
+  const { orders, loading, error } = useOrders();
+
+  const formattedOrders = orders.map(order => ({
+    id: order.id,
+    customer: order.customer,
+    items: order.items,
+    total: order.total,
+    status: order.status,
+    createdAt: new Date(order.createdAt).toLocaleString('id-ID', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }));
 
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | OrderStatus>("all");
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
-    return orders.filter((o) => {
+    return formattedOrders.filter((o) => {
       const matchesStatus = status === "all" ? true : o.status === status;
       const matchesQuery = query
         ? `${o.id} ${o.customer}`.toLowerCase().includes(query)
         : true;
       return matchesStatus && matchesQuery;
     });
-  }, [orders, q, status]);
+  }, [formattedOrders, q, status]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -62,7 +45,7 @@ export default function OrdersPages() {
             Orders
           </h1>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            List pesanan (dummy data)
+            List orders from database
           </p>
         </div>
 
@@ -121,7 +104,20 @@ export default function OrdersPages() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+        {loading && (
+          <div className="rounded-lg border border-neutral-200 bg-white p-8 text-center dark:border-neutral-700 dark:bg-neutral-800">
+            <p className="text-neutral-600 dark:text-neutral-400">Loading orders...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <p className="text-red-800 dark:text-red-200">Error: {error}</p>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b border-neutral-200 dark:border-neutral-700">
@@ -189,6 +185,7 @@ export default function OrdersPages() {
             </table>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

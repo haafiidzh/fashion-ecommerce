@@ -1,57 +1,41 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTransactions } from "@/features/transactions/hooks/use-transactions";
 
 type TxStatus = "pending" | "success" | "failed";
 
 export default function TransactionsPages() {
-  const txs = [
-    {
-      id: "TX-9001",
-      orderId: "ORD-1004",
-      method: "VA BCA",
-      amount: 2150000,
-      status: "success" as const,
-      paidAt: "2025-12-13 16:20",
-    },
-    {
-      id: "TX-9002",
-      orderId: "ORD-1003",
-      method: "Stripe Card",
-      amount: 890000,
-      status: "pending" as const,
-      paidAt: "-",
-    },
-    {
-      id: "TX-9003",
-      orderId: "ORD-1002",
-      method: "QRIS",
-      amount: 399000,
-      status: "failed" as const,
-      paidAt: "-",
-    },
-    {
-      id: "TX-9004",
-      orderId: "ORD-1001",
-      method: "COD",
-      amount: 1250000,
-      status: "pending" as const,
-      paidAt: "-",
-    },
-  ];
+  const { transactions, loading, error } = useTransactions();
+
+  const formattedTxs = transactions.map(tx => ({
+    id: `TX-${tx.id.toString().padStart(4, '0')}`,
+    orderId: tx.orderId,
+    method: tx.method || "Unknown",
+    amount: tx.amount,
+    status: tx.status as TxStatus,
+    paidAt: tx.status === "success" ? new Date(tx.createdAt).toLocaleString('id-ID', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : "-",
+    trackingNumber: tx.tracking_number
+  }));
 
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | TxStatus>("all");
   const [method, setMethod] = useState<"all" | string>("all");
 
   const methods = useMemo(() => {
-    const uniq = Array.from(new Set(txs.map((t) => t.method)));
+    const uniq = Array.from(new Set(formattedTxs.map((t) => t.method)));
     return uniq.sort((a, b) => a.localeCompare(b));
-  }, [txs]);
+  }, [formattedTxs]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
-    return txs.filter((t) => {
+    return formattedTxs.filter((t) => {
       const matchesStatus = status === "all" ? true : t.status === status;
       const matchesMethod = method === "all" ? true : t.method === method;
       const matchesQuery = query
@@ -59,7 +43,7 @@ export default function TransactionsPages() {
         : true;
       return matchesStatus && matchesMethod && matchesQuery;
     });
-  }, [txs, q, status, method]);
+  }, [formattedTxs, q, status, method]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -69,7 +53,7 @@ export default function TransactionsPages() {
             Transactions
           </h1>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            List transaksi (dummy data)
+            List transaction from database
           </p>
         </div>
 
@@ -138,7 +122,20 @@ export default function TransactionsPages() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+        {loading && (
+          <div className="rounded-lg border border-neutral-200 bg-white p-8 text-center dark:border-neutral-700 dark:bg-neutral-800">
+            <p className="text-neutral-600 dark:text-neutral-400">Loading transactions...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <p className="text-red-800 dark:text-red-200">Error: {error}</p>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b border-neutral-200 dark:border-neutral-700">
@@ -206,6 +203,7 @@ export default function TransactionsPages() {
             </table>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
