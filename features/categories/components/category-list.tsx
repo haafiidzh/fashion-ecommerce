@@ -1,22 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
-import CategoryModal from './category-modal';
+import React, { useState, useEffect } from 'react';
 import { Category, CategoryFormData } from '@/features/categories/types/category-types';
 import { useCategory } from '../context/category-context';
 import CategoryDataTable from "@/features/categories/components/category-data-table";
+import CategoryModalContainer from "@/features/categories/components/category-modal";
+import CategorySkeleton from "@/features/categories/components/category-skeleton";
+import { toast } from 'sonner';
 
 interface CategoryListProps {
     onNavigateToDetail?: (id: number) => void;
 }
 
 export default function CategoryList({ onNavigateToDetail }: CategoryListProps) {
-    const { state, createCategory, updateCategory, deleteCategory, clearError } = useCategory();
-    const { categories, loading, error } = state;
+    const { state, createCategory, updateCategory, deleteCategory } = useCategory();
+    const { categories, loading } = state;
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
+    useEffect(() => {
+        if (!loading && !hasLoadedOnce) {
+            setHasLoadedOnce(true);
+        }
+    }, [loading, hasLoadedOnce]);
 
     const handleCreateCategory = async (data: CategoryFormData) => {
         setIsSubmitting(true);
@@ -40,6 +49,7 @@ export default function CategoryList({ onNavigateToDetail }: CategoryListProps) 
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error updating category:', error);
+            toast.error('Gagal memperbarui kategori. Silakan coba lagi.');
         } finally {
             setIsSubmitting(false);
         }
@@ -52,6 +62,7 @@ export default function CategoryList({ onNavigateToDetail }: CategoryListProps) 
             await deleteCategory(id);
         } catch (error) {
             console.error('Error deleting category:', error);
+            toast.error('Failed to delete category. Please try again.');
         }
     };
 
@@ -88,21 +99,17 @@ export default function CategoryList({ onNavigateToDetail }: CategoryListProps) 
                 </button>
             </div>
 
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                    {error}
-                    <button
-                        onClick={clearError}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
-
             {loading ? (
-                <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <CategorySkeleton />
+            ) : hasLoadedOnce && categories.length === 0 ? (
+                <div className="text-center py-8">
+                    <p className="text-gray-500 mb-4">No categories found.</p>
+                    <button
+                        onClick={handleCreateNewCategory}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                        Add Your First Category
+                    </button>
                 </div>
             ) : (
                 <CategoryDataTable
@@ -113,19 +120,7 @@ export default function CategoryList({ onNavigateToDetail }: CategoryListProps) 
                 />
             )}
 
-            {!loading && categories.length === 0 && (
-                <div className="text-center py-8">
-                    <p className="text-gray-500 mb-4">No categories found.</p>
-                    <button
-                        onClick={handleCreateNewCategory}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                        Add Your First Category
-                    </button>
-                </div>
-            )}
-
-            <CategoryModal
+            <CategoryModalContainer
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 category={editingCategory}
@@ -134,4 +129,4 @@ export default function CategoryList({ onNavigateToDetail }: CategoryListProps) 
             />
         </div>
     );
-};
+}

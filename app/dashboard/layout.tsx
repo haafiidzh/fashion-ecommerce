@@ -8,6 +8,9 @@ import {
   IconShoppingCart,
   IconSettings,
   IconLogout,
+  IconShield,
+  IconLock,
+  IconUserCircle,
 } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -77,6 +80,29 @@ export default function DashboardLayout({
         <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
+
+    // User Management
+    {
+      label: "Users",
+      href: "/dashboard/users",
+      icon: (
+        <IconUsers className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Roles",
+      href: "/dashboard/roles",
+      icon: (
+        <IconShield className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Permissions",
+      href: "/dashboard/permissions",
+      icon: (
+        <IconLock className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
   ];
 
   return (
@@ -97,7 +123,7 @@ export default function DashboardLayout({
             <SidebarLink
               link={{
                 label: session?.user?.name || "User",
-                href: "#",
+                href: "/dashboard/profile",
                 icon: (
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
                     <span className="text-xs font-medium">
@@ -112,15 +138,23 @@ export default function DashboardLayout({
               className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-700"
             >
               <IconLogout className="h-5 w-5 shrink-0" />
-              <span>Logout</span>
+              <motion.span
+                animate={{
+                  display: open ? "inline-block" : "none",
+                  opacity: open ? 1 : 0,
+                }}
+                className="text-neutral-700 dark:text-neutral-200 text-sm whitespace-pre inline-block !p-0 !m-0"
+              >
+                Logout
+              </motion.span>
             </button>
           </div>
         </SidebarBody>
       </Sidebar>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-auto">
-        <div className="flex h-full w-full flex-1 flex-col bg-white md:rounded-tl-2xl md:border md:border-neutral-200 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="flex flex-1 overflow-auto bg-white md:rounded-tl-2xl md:border md:border-neutral-200 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="flex min-h-screen w-full flex-1 flex-col">
           {children}
         </div>
       </div>
