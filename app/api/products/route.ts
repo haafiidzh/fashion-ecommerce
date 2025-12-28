@@ -56,6 +56,15 @@ export async function GET(request: NextRequest) {
                         name: true,
                     },
                 },
+                product_variants: {
+                    include: {
+                        variants: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
             },
             orderBy,
         });
@@ -67,7 +76,7 @@ export async function GET(request: NextRequest) {
                 try {
                     const parsedImages = JSON.parse(product.images);
 
-                    if (Array.isArray(parsedImages) && parsedImages.length > 0 && typeof parsedImages[0] === 'string') {
+                    if (Array.isArray(parsedImages) && parsedImages.length >0 && typeof parsedImages[0] === 'string') {
                         normalizedImages = parsedImages.map((url, index) => ({
                             id: `img-${index}`,
                             url: url,
@@ -119,7 +128,7 @@ export async function POST(request: NextRequest) {
             .replace(/-+/g, '-');
 
         let uniqueSlug = slug;
-        let counter = 1;
+        let counter =1;
         while (await prisma.products.findFirst({ where: { slug: uniqueSlug } })) {
             uniqueSlug = `${slug}-${counter}`;
             counter++;

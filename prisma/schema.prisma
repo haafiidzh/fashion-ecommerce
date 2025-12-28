@@ -145,9 +145,16 @@ model products {
 }
 
 model product_variants {
-  id         Int @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   variant_id Int
   product_id Int
+  name       String // Nilai varian spesifik (contoh: "Merah", "XL")
+  price      Int?
+  stock      Int?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([product_id, variant_id, name])
 
   variants variants @relation(fields: [variant_id], references: [id])
   products products @relation(fields: [product_id], references: [id])
@@ -187,7 +194,7 @@ model transactions {
   order_id           Int                @unique
   payment_method     Int?
   total_amount       BigInt
-  tracking_number    String? @default(cuid())
+  tracking_number    String?            @default(cuid())
   transaction_status TransactionStatus?
   created_at         DateTime           @default(now())
   updated_at         DateTime           @updatedAt
@@ -206,12 +213,13 @@ model carts {
 }
 
 model cart_items {
-  id         Int      @id @default(autoincrement())
-  cart_id    Int
-  product_id Int
-  quantity   Int
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  cart_id           Int
+  product_id        Int
+  quantity          Int
+  selected_variants Json?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 
   carts    carts    @relation(fields: [cart_id], references: [id])
   products products @relation(fields: [product_id], references: [id])
@@ -225,8 +233,8 @@ model reviews {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  users        users          @relation(fields: [user_id], references: [id])
-  orders       orders         @relation(fields: [order_id], references: [id])
+  users          users            @relation(fields: [user_id], references: [id])
+  orders         orders           @relation(fields: [order_id], references: [id])
   review_details review_details[]
 }
 

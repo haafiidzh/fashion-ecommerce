@@ -1,14 +1,12 @@
-// features/shop/context/shop-context.tsx
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { productApi } from '@/features/products/services/product-service';
-import { categoryApi } from '@/features/categories/services/category-service'; // IMPORT CATEGORY API
+import { categoryApi } from '@/features/categories/services/category-service';
 import { Product } from '@/features/products/types/product-types';
 import { toast } from 'sonner';
-import {Category} from "@/features/categories/types/category-types";
+import { Category } from "@/features/categories/types/category-types";
 
-// Tipe untuk filter
 export interface ShopFilters {
     category?: string;
     size?: string;
@@ -18,7 +16,6 @@ export interface ShopFilters {
     sortBy?: string;
 }
 
-// Tipe untuk state pagination
 export interface PaginationState {
     currentPage: number;
     itemsPerPage: number;
@@ -26,42 +23,39 @@ export interface PaginationState {
     totalPages: number;
 }
 
-// Tipe untuk state shop
 export interface ShopState {
     products: Product[];
     filteredProducts: Product[];
-    categories: Category[]; // TAMBAHKAN CATEGORIES
+    categories: Category[];
     loading: boolean;
-    categoriesLoading: boolean; // TAMBAHKAN CATEGORIES LOADING
+    categoriesLoading: boolean;
     error: string | null;
-    categoriesError: string | null; // TAMBAHKAN CATEGORIES ERROR
+    categoriesError: string | null;
     filters: ShopFilters;
     pagination: PaginationState;
 }
 
-// Tipe untuk action
 type ShopAction =
     | { type: 'SET_LOADING'; payload: boolean }
-    | { type: 'SET_CATEGORIES_LOADING'; payload: boolean } // TAMBAHKAN ACTION
+    | { type: 'SET_CATEGORIES_LOADING'; payload: boolean }
     | { type: 'SET_ERROR'; payload: string | null }
-    | { type: 'SET_CATEGORIES_ERROR'; payload: string | null } // TAMBAHKAN ACTION
+    | { type: 'SET_CATEGORIES_ERROR'; payload: string | null }
     | { type: 'FETCH_PRODUCTS_SUCCESS'; payload: Product[] }
-    | { type: 'FETCH_CATEGORIES_SUCCESS'; payload: Category[] } // TAMBAHKAN ACTION
+    | { type: 'FETCH_CATEGORIES_SUCCESS'; payload: Category[] }
     | { type: 'SET_FILTERS'; payload: ShopFilters }
     | { type: 'SET_PAGINATION'; payload: Partial<PaginationState> }
     | { type: 'SET_PAGE'; payload: number }
     | { type: 'RESET_FILTERS' }
     | { type: 'RESET_STATE' };
 
-// Initial state
 const initialState: ShopState = {
     products: [],
     filteredProducts: [],
-    categories: [], // INISIALISASI CATEGORIES
+    categories: [],
     loading: false,
-    categoriesLoading: false, // INISIALISASI CATEGORIES LOADING
+    categoriesLoading: false,
     error: null,
-    categoriesError: null, // INISIALISASI CATEGORIES ERROR
+    categoriesError: null,
     filters: {
         sortBy: 'most-popular',
     },
@@ -73,7 +67,19 @@ const initialState: ShopState = {
     },
 };
 
-// Reducer
+const getProductPrice = (product: Product): number => {
+    if (product.price) return product.price;
+
+    const variants = (product as any).product_variants;
+    if (!variants || variants.length === 0) return 0;
+
+    const prices = variants
+        .map((v: any) => v.price)
+        .filter((p: number | null) => p !== null && p !== undefined);
+
+    return prices.length > 0 ? Math.min(...prices) : 0;
+};
+
 const shopReducer = (state: ShopState, action: ShopAction): ShopState => {
     switch (action.type) {
         case 'SET_LOADING':
@@ -101,7 +107,7 @@ const shopReducer = (state: ShopState, action: ShopAction): ShopState => {
                     ...state.pagination,
                     totalItems: filtered.length,
                     totalPages,
-                    currentPage: 1, // Reset to first page when filters change
+                    currentPage: 1,
                 },
             };
         case 'SET_PAGINATION':
@@ -127,61 +133,75 @@ const shopReducer = (state: ShopState, action: ShopAction): ShopState => {
     }
 };
 
-// Helper function to apply filters
 const applyFilters = (products: Product[], filters: ShopFilters): Product[] => {
     let filtered = [...products];
 
-    // Apply category filter
     if (filters.category) {
         filtered = filtered.filter(product =>
             product.product_category?.name.toLowerCase() === filters.category?.toLowerCase()
         );
     }
 
-    // Apply price range filter
-    if (filters.priceRange) {
-        filtered = filtered.filter(product =>
-            product.price >= filters.priceRange![0] && product.price <= filters.priceRange![1]
-        );
+    if (filters.size) {
+        filtered = filtered.filter((product: any) => {
+            if (!product.product_variants) return false;
+
+            return product.product_variants.some((v: any) =>
+                v.variants?.name === 'Ukuran' && v.name === filters.size
+            );
+        });
     }
 
-    // Apply sorting
+    if (filters.color) {
+        filtered = filtered.filter((product: any) => {
+            if (!product.product_variants) return false;
+
+            return product.product_variants.some((v: any) =>
+                v.variants?.name === 'Warna' && v.name === filters.color
+            );
+        });
+    }
+
+    if (filters.priceRange) {
+        filtered = filtered.filter(product => {
+            const price = getProductPrice(product);
+            return price >= filters.priceRange![0] && price <= filters.priceRange![1];
+        });
+    }
+
     switch (filters.sortBy) {
         case 'low-price':
-            filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+            filtered.sort((a, b) => getProductPrice(a) - getProductPrice(b));
             break;
         case 'high-price':
-            filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+            filtered.sort((a, b) => getProductPrice(b) - getProductPrice(a));
             break;
         case 'most-popular':
         default:
-            // Default sorting (could be based on rating, sales, etc.)
             break;
     }
 
     return filtered;
 };
 
-// Context
 const ShopContext = createContext<{
     state: ShopState;
     fetchProducts: () => Promise<void>;
-    fetchCategories: () => Promise<void>; // TAMBAHKAN FUNGSI
+    fetchCategories: () => Promise<void>;
     setFilters: (filters: Partial<ShopFilters>) => void;
     setPage: (page: number) => void;
     resetFilters: () => void;
     clearError: () => void;
 }>({
     state: initialState,
-    fetchProducts: async () => {},
-    fetchCategories: async () => {}, // INISIALISASI
-    setFilters: () => {},
-    setPage: () => {},
-    resetFilters: () => {},
-    clearError: () => {},
+    fetchProducts: async () => { },
+    fetchCategories: async () => { },
+    setFilters: () => { },
+    setPage: () => { },
+    resetFilters: () => { },
+    clearError: () => { },
 });
 
-// Provider
 export const ShopProvider = ({ children }: { children: ReactNode }) => {
     const [state, dispatch] = useReducer(shopReducer, initialState);
 
@@ -190,7 +210,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
         try {
             const products = await productApi.getProducts();
             dispatch({ type: 'FETCH_PRODUCTS_SUCCESS', payload: products });
-            dispatch({ type: 'SET_FILTERS', payload: state.filters }); // Re-apply filters
+            dispatch({ type: 'SET_FILTERS', payload: state.filters });
         } catch (error) {
             console.error('Failed to fetch products:', error);
             dispatch({ type: 'SET_ERROR', payload: 'Gagal memuat produk' });
@@ -228,7 +248,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         fetchProducts();
-        fetchCategories(); // PANGGIL FUNGSI FETCH CATEGORIES
+        fetchCategories();
     }, []);
 
     return (
@@ -248,7 +268,6 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
-// Hook
 export const useShop = () => {
     const context = useContext(ShopContext);
     if (!context) {

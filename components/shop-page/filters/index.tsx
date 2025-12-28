@@ -1,4 +1,3 @@
-// components/shop-page/filters/index.tsx
 import React from "react";
 import CategoriesSection from "@/components/shop-page/filters/CategoriesSection";
 import ColorsSection from "@/components/shop-page/filters/ColorsSection";
@@ -12,8 +11,7 @@ const Filters = () => {
     const { resetFilters } = useShop();
 
     const handleApplyFilters = () => {
-        // Filters are already applied when changed, but we could add additional logic here
-        // For example, close the mobile filters drawer
+
     };
 
     return (
@@ -27,11 +25,11 @@ const Filters = () => {
             <hr className="border-t-black/10" />
             <SizeSection />
             <hr className="border-t-black/10" />
-            {/*<DressStyleSection />*/}
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 flex-nowrap">
                 <Button
                     type="button"
-                    className="bg-black w-full rounded-full text-sm font-medium py-4 h-12"
+                    className="bg-black flex-1 rounded-full text-sm font-medium py-2.5 h-10"
                     onClick={handleApplyFilters}
                 >
                     Apply Filter
@@ -39,7 +37,7 @@ const Filters = () => {
                 <Button
                     type="button"
                     variant="outline"
-                    className="w-full rounded-full text-sm font-medium py-4 h-12"
+                    className="flex-1 rounded-full text-sm font-medium py-2.5 h-10"
                     onClick={resetFilters}
                 >
                     Reset

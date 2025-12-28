@@ -49,22 +49,21 @@ async function main() {
         categoryList.map(c => [c.name, c.id])
     );
 
-    // Seed Variants
-    const variants = await prisma.variants.createMany({
+    // ==========================================
+    // PERBAIKAN 1: Seed Variant Types (Tipe Varian)
+    // ==========================================
+    // Sekarang kita hanya menyimpan nama TIPENYA (misal: "Warna", "Ukuran")
+    const variantTypes = await prisma.variants.createMany({
         data: [
-            { name: 'S' },
-            { name: 'M' },
-            { name: 'L' },
-            { name: 'XL' },
-            { name: 'XXL' },
-            { name: 'Hitam' },
-            { name: 'Putih' },
-            { name: 'Merah' },
-            { name: 'Biru' },
-            { name: 'Hijau' },
+            { name: 'Ukuran' },
+            { name: 'Warna' },
         ],
     });
-    console.log('✓ Variants seeded');
+    console.log('✓ Variant Types seeded');
+
+    // Ambil ID tipe varian untuk dipakai di product_variants
+    const variantsDb = await prisma.variants.findMany();
+    const variantMap = Object.fromEntries(variantsDb.map(v => [v.name, v.id]));
 
     // Define two Cloudinary images
     const imageUrls = [
@@ -73,7 +72,7 @@ async function main() {
     ];
 
     // Seed Products - Kaos
-    const kaosProducts = await prisma.products.createMany({
+    await prisma.products.createMany({
         data: [
             {
                 category_id: categoryMap['Kaos'],
@@ -290,30 +289,47 @@ async function main() {
 
     console.log('✓ Products seeded');
 
-    // Link some products with variants
-    const productList = await prisma.products.findMany({ take: 10 });
-    const variantList = await prisma.variants.findMany();
+    // ==========================================
+    // PERBAIKAN 2: Link Products with Variants (Values)
+    // ==========================================
+    const productList = await prisma.products.findMany();
 
-    for (const product of productList) {
-        // Add size variants (S, M, L, XL)
-        for (let i = 0; i < 4; i++) {
-            await prisma.product_variants.create({
-                data: {
-                    product_id: product.id,
-                    variant_id: variantList[i].id,
-                },
+    // Definisikan opsi nilai varian
+    const sizeOptions = ['S', 'M', 'L', 'XL'];
+    const colorOptions = ['Hitam', 'Putih', 'Merah', 'Biru'];
+
+    const variantDataToInsert: { product_id: number; variant_id: number; name: string; stock: number; price: null; }[] = [];
+
+    // Siapkan data mass insert
+    productList.forEach((product) => {
+        // 1. Tambahkan varian Ukuran
+        sizeOptions.forEach(size => {
+            variantDataToInsert.push({
+                product_id: product.id,
+                variant_id: variantMap['Ukuran'], // Link ke tipe "Ukuran"
+                name: size,                       // Nilai: "S", "M", dst
+                stock: 50,                        // Dummy stock
+                price: null                       // Harga default produk
             });
-        }
-        // Add 2-3 color variants
-        for (let i = 5; i < 8; i++) {
-            await prisma.product_variants.create({
-                data: {
-                    product_id: product.id,
-                    variant_id: variantList[i].id,
-                },
+        });
+
+        // 2. Tambahkan varian Warna
+        colorOptions.forEach(color => {
+            variantDataToInsert.push({
+                product_id: product.id,
+                variant_id: variantMap['Warna'],  // Link ke tipe "Warna"
+                name: color,                      // Nilai: "Hitam", "Putih", dst
+                stock: 50,
+                price: null
             });
-        }
-    }
+        });
+    });
+
+    // Insert semua variants sekaligus (lebih cepat)
+    await prisma.product_variants.createMany({
+        data: variantDataToInsert,
+        skipDuplicates: true,
+    });
 
     console.log('✓ Product Variants seeded');
     console.log('Seed completed successfully!');

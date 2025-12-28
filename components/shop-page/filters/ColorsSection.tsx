@@ -1,4 +1,3 @@
-// src/components/shop-page/filters/ColorsSection.tsx
 "use client";
 
 import React from "react";
@@ -10,7 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { useShop } from "@/features/shop/context/shop-context";
-import {CheckCircle} from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 const ColorsSection = () => {
     const { setFilters, state } = useShop();
@@ -28,16 +27,10 @@ const ColorsSection = () => {
                 <AccordionContent className="pt-4 pb-0">
                     <div className="flex space-2.5 flex-wrap md:grid grid-cols-5 gap-2.5">
                         {[
-                            { name: "green", class: "bg-green-600" },
-                            { name: "red", class: "bg-red-600" },
-                            { name: "yellow", class: "bg-yellow-300" },
-                            { name: "orange", class: "bg-orange-600" },
-                            { name: "cyan", class: "bg-cyan-400" },
-                            { name: "blue", class: "bg-blue-600" },
-                            { name: "purple", class: "bg-purple-600" },
-                            { name: "pink", class: "bg-pink-600" },
-                            { name: "white", class: "bg-white" },
-                            { name: "black", class: "bg-black" },
+                            { name: "Merah", class: "bg-red-600" },
+                            { name: "Biru", class: "bg-blue-600" },
+                            { name: "Putih", class: "bg-white" },
+                            { name: "Hitam", class: "bg-black" },
                         ].map((color, index) => (
                             <button
                                 key={index}

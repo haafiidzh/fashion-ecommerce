@@ -1,4 +1,3 @@
-// features/products/context/product-context.tsx
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
@@ -7,7 +6,6 @@ import { Product, ProductState, ProductFormData } from '../types/product-types';
 import { toast } from 'sonner';
 import { usePathname } from 'next/navigation';
 
-// Tipe untuk state pemilihan produk
 interface ProductSelectionState {
     sizeSelection: string;
     colorSelection: {
@@ -17,7 +15,6 @@ interface ProductSelectionState {
     quantity: number;
 }
 
-// Tipe untuk Cart Item
 interface CartItem {
     id: number;
     name: string;
@@ -31,14 +28,11 @@ interface CartItem {
     quantity: number;
 }
 
-// === PERBAIKAN BACKWARD COMPATIBILITY ===
-// ProductContextType sekarang memiliki properti `state` bersarang
-// agar kompatibel dengan kode yang sudah ada.
 interface ProductContextType {
-    state: ProductState; // State untuk produk (products, loading, error)
-    selection: ProductSelectionState; // State untuk pemilihan (ukuran, warna, qty)
-    cart: CartItem[]; // State untuk keranjang
-    // Fungsi-fungsi
+    state: ProductState;
+    selection: ProductSelectionState;
+    cart: CartItem[];
+
     fetchProducts: () => Promise<void>;
     createProduct: (data: ProductFormData) => Promise<void>;
     updateProduct: (id: number, data: ProductFormData) => Promise<void>;
@@ -53,8 +47,6 @@ interface ProductContextType {
     clearCart: () => void;
 }
 
-// === PERBAIKAN BACKWARD COMPATIBILITY ===
-// initialState sekarang memiliki struktur bersarang dengan properti `state`
 const initialState = {
     state: {
         products: [],
@@ -88,8 +80,6 @@ type ProductAction =
     | { type: 'CLEAR_CART' }
     | { type: 'RESET_STATE' };
 
-// === PERBAIKAN BACKWARD COMPATIBILITY ===
-// Reducer sekarang memanipulasi `state.state` untuk menjaga struktur bersarang
 const productReducer = (state: typeof initialState, action: ProductAction): typeof initialState => {
     switch (action.type) {
         case 'SET_LOADING':
@@ -166,7 +156,7 @@ const productReducer = (state: typeof initialState, action: ProductAction): type
                     ...state,
                     cart: state.cart.map((item) =>
                         item.id === action.payload.id &&
-                        JSON.stringify(item.attributes) === JSON.stringify(action.payload.attributes)
+                            JSON.stringify(item.attributes) === JSON.stringify(action.payload.attributes)
                             ? { ...item, quantity: item.quantity + action.payload.quantity }
                             : item
                     ),
@@ -321,8 +311,6 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         fetchProducts();
     }, []);
 
-    // === PERBAIKAN BACKWARD COMPATIBILITY ===
-    // Value yang diberikan ke provider harus sesuai dengan ProductContextType
     const contextValue: ProductContextType = {
         state: reducerState.state,
         selection: reducerState.selection,

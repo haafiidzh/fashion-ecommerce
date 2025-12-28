@@ -1,4 +1,3 @@
-// src/app/shop/page.tsx
 "use client";
 
 import BreadcrumbShop from "@/components/shop-page/BreadcrumbShop";
@@ -23,15 +22,23 @@ import {
 import { useShop } from "@/features/shop/context/shop-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductCard from "@/features/products/components/product-card";
-import {Sliders} from "lucide-react";
+import { Sliders } from "lucide-react";
+import { useEffect } from "react";
 
 export default function ShopPage() {
     const { state, setFilters, setPage } = useShop();
 
-    // Calculate products to display based on pagination
     const startIndex = (state.pagination.currentPage - 1) * state.pagination.itemsPerPage;
     const endIndex = startIndex + state.pagination.itemsPerPage;
     const productsToDisplay = state.filteredProducts.slice(startIndex, endIndex);
+
+    useEffect(() => {
+        console.log("Raw Products (All Data):", state.products);
+        console.log("Filtered Products (After Filter):", state.filteredProducts);
+        console.log("Active Filters:", state.filters);
+        console.log("Pagination:", state.pagination);
+        console.log("Displaying Products:", productsToDisplay);
+    }, [state]);
 
     const handleSortChange = (value: string) => {
         setFilters({ sortBy: value });
@@ -61,9 +68,9 @@ export default function ShopPage() {
                                 <MobileFilters />
                             </div>
                             <div className="flex flex-col sm:items-center sm:flex-row">
-                <span className="text-sm md:text-base text-black/60 mr-3">
-                  Showing {startIndex + 1}-{Math.min(endIndex, state.filteredProducts.length)} of {state.filteredProducts.length} Products
-                </span>
+                                <span className="text-sm md:text-base text-black/60 mr-3">
+                                    Showing {startIndex + 1}-{Math.min(endIndex, state.filteredProducts.length)} of {state.filteredProducts.length} Products
+                                </span>
                                 <div className="flex items-center">
                                     Sort by:{" "}
                                     <Select
@@ -126,7 +133,6 @@ export default function ShopPage() {
                                                 }}
                                             />
                                             <PaginationContent>
-                                                {/* First page */}
                                                 <PaginationItem>
                                                     <PaginationLink
                                                         href="#"
@@ -141,7 +147,6 @@ export default function ShopPage() {
                                                     </PaginationLink>
                                                 </PaginationItem>
 
-                                                {/* Second page */}
                                                 {state.pagination.totalPages > 1 && (
                                                     <PaginationItem>
                                                         <PaginationLink
@@ -158,7 +163,6 @@ export default function ShopPage() {
                                                     </PaginationItem>
                                                 )}
 
-                                                {/* Third page */}
                                                 {state.pagination.totalPages > 2 && (
                                                     <PaginationItem className="hidden lg:block">
                                                         <PaginationLink
@@ -175,14 +179,12 @@ export default function ShopPage() {
                                                     </PaginationItem>
                                                 )}
 
-                                                {/* Ellipsis */}
                                                 {state.pagination.totalPages > 4 && (
                                                     <PaginationItem>
                                                         <PaginationEllipsis className="text-black/50 font-medium text-sm" />
                                                     </PaginationItem>
                                                 )}
 
-                                                {/* Last page */}
                                                 {state.pagination.totalPages > 3 && (
                                                     <PaginationItem className="hidden lg:block">
                                                         <PaginationLink
@@ -199,7 +201,6 @@ export default function ShopPage() {
                                                     </PaginationItem>
                                                 )}
 
-                                                {/* Second to last page */}
                                                 {state.pagination.totalPages > 2 && (
                                                     <PaginationItem className="hidden sm:block">
                                                         <PaginationLink
@@ -216,7 +217,6 @@ export default function ShopPage() {
                                                     </PaginationItem>
                                                 )}
 
-                                                {/* Last page for mobile */}
                                                 {state.pagination.totalPages > 1 && (
                                                     <PaginationItem>
                                                         <PaginationLink

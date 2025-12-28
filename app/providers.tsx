@@ -7,6 +7,7 @@ import { RoleProvider } from "@/features/roles/context/role-context";
 import { UserProvider } from "@/features/users/context/user-context";
 import { CartProvider } from "@/features/cart/context/cart-context";
 import { SessionProvider } from "next-auth/react";
+import {ShopProvider} from "@/features/shop";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -16,7 +17,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <UserProvider>
             <CategoryProvider>
               <ProductProvider>
-                <CartProvider>{children}</CartProvider>
+                <CartProvider>
+                  <ShopProvider>
+                      {children}
+                  </ShopProvider>
+                </CartProvider>
               </ProductProvider>
             </CategoryProvider>
           </UserProvider>
