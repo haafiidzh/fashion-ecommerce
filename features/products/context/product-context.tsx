@@ -1,3 +1,4 @@
+// features/products/context/product-context.tsx
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
@@ -6,10 +7,69 @@ import { Product, ProductState, ProductFormData } from '../types/product-types';
 import { toast } from 'sonner';
 import { usePathname } from 'next/navigation';
 
-const initialState: ProductState = {
-    products: [],
-    loading: false,
-    error: null,
+// Tipe untuk state pemilihan produk
+interface ProductSelectionState {
+    sizeSelection: string;
+    colorSelection: {
+        name: string;
+        code: string;
+    };
+    quantity: number;
+}
+
+// Tipe untuk Cart Item
+interface CartItem {
+    id: number;
+    name: string;
+    srcUrl: string;
+    price: number;
+    attributes: string[];
+    discount: {
+        percentage: number;
+        amount: number;
+    };
+    quantity: number;
+}
+
+// === PERBAIKAN BACKWARD COMPATIBILITY ===
+// ProductContextType sekarang memiliki properti `state` bersarang
+// agar kompatibel dengan kode yang sudah ada.
+interface ProductContextType {
+    state: ProductState; // State untuk produk (products, loading, error)
+    selection: ProductSelectionState; // State untuk pemilihan (ukuran, warna, qty)
+    cart: CartItem[]; // State untuk keranjang
+    // Fungsi-fungsi
+    fetchProducts: () => Promise<void>;
+    createProduct: (data: ProductFormData) => Promise<void>;
+    updateProduct: (id: number, data: ProductFormData) => Promise<void>;
+    deleteProduct: (id: number) => Promise<void>;
+    clearError: () => void;
+    setSizeSelection: (size: string) => void;
+    setColorSelection: (color: { name: string; code: string }) => void;
+    setQuantity: (quantity: number) => void;
+    addToCart: (item: CartItem) => void;
+    removeFromCart: (id: number, attributes: string[]) => void;
+    updateCartQuantity: (id: number, attributes: string[], quantity: number) => void;
+    clearCart: () => void;
+}
+
+// === PERBAIKAN BACKWARD COMPATIBILITY ===
+// initialState sekarang memiliki struktur bersarang dengan properti `state`
+const initialState = {
+    state: {
+        products: [],
+        loading: false,
+        error: null,
+    } as ProductState,
+    selection: {
+        sizeSelection: 'Medium',
+        colorSelection: {
+            name: 'Coklat',
+            code: 'bg-[#4F4631]',
+        },
+        quantity: 1,
+    },
+    cart: [] as CartItem[],
 };
 
 type ProductAction =
@@ -19,38 +79,125 @@ type ProductAction =
     | { type: 'CREATE_PRODUCT_SUCCESS'; payload: Product }
     | { type: 'UPDATE_PRODUCT_SUCCESS'; payload: Product }
     | { type: 'DELETE_PRODUCT_SUCCESS'; payload: number }
+    | { type: 'SET_SIZE_SELECTION'; payload: string }
+    | { type: 'SET_COLOR_SELECTION'; payload: { name: string; code: string } }
+    | { type: 'SET_QUANTITY'; payload: number }
+    | { type: 'ADD_TO_CART'; payload: CartItem }
+    | { type: 'REMOVE_FROM_CART'; payload: { id: number; attributes: string[] } }
+    | { type: 'UPDATE_CART_QUANTITY'; payload: { id: number; attributes: string[]; quantity: number } }
+    | { type: 'CLEAR_CART' }
     | { type: 'RESET_STATE' };
 
-const productReducer = (state: ProductState, action: ProductAction): ProductState => {
+// === PERBAIKAN BACKWARD COMPATIBILITY ===
+// Reducer sekarang memanipulasi `state.state` untuk menjaga struktur bersarang
+const productReducer = (state: typeof initialState, action: ProductAction): typeof initialState => {
     switch (action.type) {
         case 'SET_LOADING':
-            return { ...state, loading: action.payload };
+            return {
+                ...state,
+                state: { ...state.state, loading: action.payload }
+            };
         case 'SET_ERROR':
-            return { ...state, error: action.payload, loading: false };
+            return {
+                ...state,
+                state: { ...state.state, error: action.payload, loading: false }
+            };
         case 'FETCH_PRODUCTS_SUCCESS':
-            return { ...state, loading: false, products: action.payload, error: null };
+            return {
+                ...state,
+                state: { loading: false, products: action.payload, error: null }
+            };
         case 'CREATE_PRODUCT_SUCCESS':
             return {
                 ...state,
-                loading: false,
-                products: [...state.products, action.payload],
-                error: null,
+                state: {
+                    ...state.state,
+                    loading: false,
+                    products: [...state.state.products, action.payload],
+                    error: null,
+                },
             };
         case 'UPDATE_PRODUCT_SUCCESS':
             return {
                 ...state,
-                loading: false,
-                products: state.products.map((product) =>
-                    product.id === action.payload.id ? action.payload : product
-                ),
-                error: null,
+                state: {
+                    ...state.state,
+                    loading: false,
+                    products: state.state.products.map((product) =>
+                        product.id === action.payload.id ? action.payload : product
+                    ),
+                    error: null,
+                },
             };
         case 'DELETE_PRODUCT_SUCCESS':
             return {
                 ...state,
-                loading: false,
-                products: state.products.filter((product) => product.id !== action.payload),
-                error: null,
+                state: {
+                    ...state.state,
+                    loading: false,
+                    products: state.state.products.filter((product) => product.id !== action.payload),
+                    error: null,
+                },
+            };
+        case 'SET_SIZE_SELECTION':
+            return {
+                ...state,
+                selection: { ...state.selection, sizeSelection: action.payload },
+            };
+        case 'SET_COLOR_SELECTION':
+            return {
+                ...state,
+                selection: { ...state.selection, colorSelection: action.payload },
+            };
+        case 'SET_QUANTITY':
+            return {
+                ...state,
+                selection: { ...state.selection, quantity: action.payload },
+            };
+        case 'ADD_TO_CART':
+            const existingItem = state.cart.find(
+                (item) =>
+                    item.id === action.payload.id &&
+                    JSON.stringify(item.attributes) === JSON.stringify(action.payload.attributes)
+            );
+
+            if (existingItem) {
+                return {
+                    ...state,
+                    cart: state.cart.map((item) =>
+                        item.id === action.payload.id &&
+                        JSON.stringify(item.attributes) === JSON.stringify(action.payload.attributes)
+                            ? { ...item, quantity: item.quantity + action.payload.quantity }
+                            : item
+                    ),
+                };
+            } else {
+                return {
+                    ...state,
+                    cart: [...state.cart, action.payload],
+                };
+            }
+        case 'REMOVE_FROM_CART':
+            return {
+                ...state,
+                cart: state.cart.filter(
+                    (item) =>
+                        !(item.id === action.payload.id && JSON.stringify(item.attributes) === JSON.stringify(action.payload.attributes))
+                ),
+            };
+        case 'UPDATE_CART_QUANTITY':
+            return {
+                ...state,
+                cart: state.cart.map((item) =>
+                    item.id === action.payload.id && JSON.stringify(item.attributes) === JSON.stringify(action.payload.attributes)
+                        ? { ...item, quantity: action.payload.quantity }
+                        : item
+                ),
+            };
+        case 'CLEAR_CART':
+            return {
+                ...state,
+                cart: [],
             };
         case 'RESET_STATE':
             return { ...initialState };
@@ -59,24 +206,24 @@ const productReducer = (state: ProductState, action: ProductAction): ProductStat
     }
 };
 
-const ProductContext = createContext<{
-    state: ProductState;
-    fetchProducts: () => Promise<void>;
-    createProduct: (data: ProductFormData) => Promise<void>;
-    updateProduct: (id: number, data: ProductFormData) => Promise<void>;
-    deleteProduct: (id: number) => Promise<void>;
-    clearError: () => void;
-}>({
-    state: initialState,
+const ProductContext = createContext<ProductContextType>({
+    ...initialState,
     fetchProducts: async () => { },
     createProduct: async () => { },
     updateProduct: async () => { },
     deleteProduct: async () => { },
     clearError: () => { },
+    setSizeSelection: () => { },
+    setColorSelection: () => { },
+    setQuantity: () => { },
+    addToCart: () => { },
+    removeFromCart: () => { },
+    updateCartQuantity: () => { },
+    clearCart: () => { },
 });
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
-    const [state, dispatch] = useReducer(productReducer, initialState);
+    const [reducerState, dispatch] = useReducer(productReducer, initialState);
 
     const path = usePathname();
     const fetchProducts = async () => {
@@ -140,21 +287,62 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
         dispatch({ type: 'SET_ERROR', payload: null });
     };
 
+    const setSizeSelection = (size: string) => {
+        dispatch({ type: 'SET_SIZE_SELECTION', payload: size });
+    };
+
+    const setColorSelection = (color: { name: string; code: string }) => {
+        dispatch({ type: 'SET_COLOR_SELECTION', payload: color });
+    };
+
+    const setQuantity = (quantity: number) => {
+        dispatch({ type: 'SET_QUANTITY', payload: quantity });
+    };
+
+    const addToCart = (item: CartItem) => {
+        dispatch({ type: 'ADD_TO_CART', payload: item });
+        toast.success('Produk ditambahkan ke keranjang');
+    };
+
+    const removeFromCart = (id: number, attributes: string[]) => {
+        dispatch({ type: 'REMOVE_FROM_CART', payload: { id, attributes } });
+        toast.success('Produk dihapus dari keranjang');
+    };
+
+    const updateCartQuantity = (id: number, attributes: string[], quantity: number) => {
+        dispatch({ type: 'UPDATE_CART_QUANTITY', payload: { id, attributes, quantity } });
+    };
+
+    const clearCart = () => {
+        dispatch({ type: 'CLEAR_CART' });
+    };
+
     useEffect(() => {
         fetchProducts();
     }, []);
 
+    // === PERBAIKAN BACKWARD COMPATIBILITY ===
+    // Value yang diberikan ke provider harus sesuai dengan ProductContextType
+    const contextValue: ProductContextType = {
+        state: reducerState.state,
+        selection: reducerState.selection,
+        cart: reducerState.cart,
+        fetchProducts,
+        createProduct,
+        updateProduct,
+        deleteProduct,
+        clearError,
+        setSizeSelection,
+        setColorSelection,
+        setQuantity,
+        addToCart,
+        removeFromCart,
+        updateCartQuantity,
+        clearCart,
+    };
+
     return (
-        <ProductContext.Provider
-            value={{
-                state,
-                fetchProducts,
-                createProduct,
-                updateProduct,
-                deleteProduct,
-                clearError,
-            }}
-        >
+        <ProductContext.Provider value={contextValue}>
             {children}
         </ProductContext.Provider>
     );
