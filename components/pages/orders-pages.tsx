@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useOrders } from "@/features/orders/hooks/use-orders";
+import { toast } from "sonner";
 
-type OrderStatus = "pending" | "processing" | "shipped" | "completed" | "cancelled";
+type OrderStatus = "pending" | "approved" | "rejected" | "processing" | "shipped" | "delivered" | "completed" | "cancelled";
 
 export default function OrdersPages() {
-  const { orders, loading, error } = useOrders();
+  const { orders, loading, error, fetchOrders } = useOrders();
 
   const formattedOrders = orders.map(order => ({
     id: order.id,
@@ -25,6 +26,31 @@ export default function OrdersPages() {
 
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | OrderStatus>("all");
+
+  const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: orderId,
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update order status');
+      }
+
+      toast.success(`Order status updated to ${newStatus}`);
+      fetchOrders(); // Refresh orders list
+    } catch (error) {
+      console.error('Update order status error:', error);
+      toast.error('Failed to update order status');
+    }
+  };
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -74,8 +100,11 @@ export default function OrdersPages() {
               >
                 <option value="all">All</option>
                 <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
                 <option value="processing">Processing</option>
                 <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
@@ -172,12 +201,28 @@ export default function OrdersPages() {
                       {order.createdAt}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <a
-                        href={`/dashboard/orders/${encodeURIComponent(order.id)}`}
-                        className="text-blue-600 hover:underline dark:text-blue-400"
-                      >
-                        Detail
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={order.status}
+                          onChange={(e) => updateOrderStatus(order.id, e.target.value as OrderStatus)}
+                          className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="approved">Approved</option>
+                          <option value="rejected">Rejected</option>
+                          <option value="processing">Processing</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <a
+                          href={`/dashboard/orders/${encodeURIComponent(order.id)}`}
+                          className="text-blue-600 hover:underline dark:text-blue-400 text-xs"
+                        >
+                          Detail
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -202,24 +247,33 @@ function formatIDR(amount: number) {
 function StatusBadge({
   status,
 }: {
-  status: "pending" | "processing" | "shipped" | "completed" | "cancelled";
+  status: OrderStatus;
 }) {
-  const styles: Record<typeof status, string> = {
+  const styles: Record<OrderStatus, string> = {
     pending:
       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200",
+    approved:
+      "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200",
+    rejected:
+      "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200",
     processing:
       "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200",
     shipped:
       "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200",
+    delivered:
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200",
     completed:
-      "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200",
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
     cancelled: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200",
   };
 
-  const label: Record<typeof status, string> = {
+  const label: Record<OrderStatus, string> = {
     pending: "Pending",
+    approved: "Approved",
+    rejected: "Rejected",
     processing: "Processing",
     shipped: "Shipped",
+    delivered: "Delivered",
     completed: "Completed",
     cancelled: "Cancelled",
   };

@@ -56,15 +56,6 @@ export async function GET(request: NextRequest) {
                         name: true,
                     },
                 },
-                product_variants: {
-                    include: {
-                        variants: {
-                            select: {
-                                name: true
-                            }
-                        }
-                    }
-                }
             },
             orderBy,
         });

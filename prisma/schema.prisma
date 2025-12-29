@@ -23,8 +23,11 @@ enum TransactionStatus {
 
 enum OrderStatus {
   pending
+  approved
+  rejected
   processing
   shipped
+  delivered
   completed
   cancelled
 }

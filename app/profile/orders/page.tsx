@@ -18,66 +18,30 @@ interface Order {
   id: string;
   orderNumber: string;
   date: string;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "approved" | "rejected" | "completed";
   total: number;
   items: OrderItem[];
   shippingAddress: string;
   trackingNumber?: string;
 }
 
-const dummyOrders: Order[] = [
-  {
-    id: "1",
-    orderNumber: "ORD-2024-001",
-    date: "2024-01-15",
-    status: "delivered",
-    total: 450000,
-    trackingNumber: "JNE123456789",
-    shippingAddress: "Jl. Sudirman No. 123, Jakarta Pusat, DKI Jakarta 10110",
-    items: [
-      {
-        id: 1,
-        name: "Classic White T-Shirt",
-        quantity: 2,
-        price: 150000,
-      },
-      {
-        id: 2,
-        name: "Denim Jeans",
-        quantity: 1,
-        price: 350000,
-      },
-    ],
-  },
-  {
-    id: "2",
-    orderNumber: "ORD-2024-002",
-    date: "2024-01-20",
-    status: "processing",
-    total: 280000,
-    shippingAddress: "Jl. Gatot Subroto No. 45, Jakarta Selatan, DKI Jakarta 12930",
-    items: [
-      {
-        id: 3,
-        name: "Summer Dress",
-        quantity: 1,
-        price: 280000,
-      },
-    ],
-  },
-];
+// Orders data will be fetched from API
 
 const orderStatuses = [
   { key: "pending", label: "Order Placed" },
+  { key: "approved", label: "Approved" },
   { key: "processing", label: "Processing" },
   { key: "shipped", label: "Shipped" },
   { key: "delivered", label: "Delivered" },
+  { key: "completed", label: "Completed" },
 ];
 
 export default function OrdersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -85,7 +49,46 @@ export default function OrdersPage() {
     }
   }, [status, router]);
 
-  if (status === "loading") {
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchOrders();
+    }
+  }, [session]);
+
+  const fetchOrders = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/orders?userId=${session.user.id}`);
+      if (response.ok) {
+        const ordersData = await response.json();
+        // Transform API data to match Order interface
+        const ordersArray = ordersData.data || [];
+        const transformedOrders = ordersArray.map((order: any) => ({
+          id: order.id.toString(),
+          orderNumber: order.order_uuid,
+          date: order.created_at,
+          status: order.status,
+          total: order.total_amount,
+          items: order.items_detail.map((item: any, index: number) => ({
+            id: index + 1,
+            name: item.product_name,
+            quantity: item.quantity || Math.round(item.total / (item.price || 1)), // Fallback calculation
+            price: item.price || item.total, // Use price from API or fallback to total
+          })),
+          shippingAddress: "Test Address", // Could be enhanced later
+        }));
+        setOrders(transformedOrders);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (status === "loading" || loading) {
     return (
       <CustomerLayout
         breadcrumbs={[{ label: "Profile", href: "/profile" }, { label: "Orders" }]}
@@ -112,23 +115,32 @@ export default function OrdersPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("id-ID", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    try {
+      return new Date(dateString).toLocaleDateString("id-ID", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      return dateString; // Fallback to original string if parsing fails
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
       case "processing":
         return "bg-blue-100 text-blue-800";
       case "shipped":
         return "bg-purple-100 text-purple-800";
       case "delivered":
-        return "bg-green-100 text-green-800";
+        return "bg-indigo-100 text-indigo-800";
+      case "completed":
+        return "bg-emerald-100 text-emerald-800";
+      case "rejected":
       case "cancelled":
         return "bg-red-100 text-red-800";
       default:
@@ -144,7 +156,14 @@ export default function OrdersPage() {
         <h1 className="text-2xl sm:text-3xl font-bold text-black mb-8">My Orders</h1>
 
         <div className="space-y-4">
-          {dummyOrders.map((order) => {
+          {orders.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-black/10 p-12 text-center">
+              <Package className="h-12 w-12 text-black/40 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-black mb-2">No Orders Yet</h3>
+              <p className="text-black/60">You haven't placed any orders yet.</p>
+            </div>
+          ) : (
+            orders.map((order) => {
             const isExpanded = expandedOrder === order.id;
             const currentStatusIndex = getStatusIndex(order.status);
 
@@ -293,28 +312,43 @@ export default function OrdersPage() {
 
                     {/* Shipping Info */}
                     <div className="p-6 bg-black/5 border-t border-black/10">
-                      <h4 className="text-sm font-semibold text-black mb-2">
-                        Shipping Address
-                      </h4>
-                      <p className="text-sm text-black/80 mb-4">
-                        {order.shippingAddress}
-                      </p>
-                      {order.trackingNumber && (
+                      <div className="flex items-center justify-between mb-4">
                         <div>
                           <h4 className="text-sm font-semibold text-black mb-2">
-                            Tracking Number
+                            Shipping Address
                           </h4>
-                          <p className="text-sm text-black/80 font-mono">
-                            {order.trackingNumber}
+                          <p className="text-sm text-black/80">
+                            {order.shippingAddress}
                           </p>
+                          {order.trackingNumber && (
+                            <div className="mt-2">
+                              <h4 className="text-sm font-semibold text-black mb-1">
+                                Tracking Number
+                              </h4>
+                              <p className="text-sm text-black/80 font-mono">
+                                {order.trackingNumber}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
+
+                        {/* Write Review Button */}
+                        {order.status === "delivered" && (
+                          <a
+                            href={`/profile/write-review?orderId=${order.id}`}
+                            className="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                          >
+                            Write Review
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             );
-          })}
+            })
+          )}
         </div>
       </div>
     </CustomerLayout>

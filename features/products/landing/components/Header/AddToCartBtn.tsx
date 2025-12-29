@@ -32,6 +32,8 @@ const AddToCartBtn = ({ data }: { data: ProductCartData }) => {
 
         try {
             await addToCart(userId, data.id, data.quantity);
+            // Redirect to cart page after successful add to cart
+            router.push("/cart");
         } catch (error) {
             console.error("Gagal menambahkan ke keranjang:", error);
         }

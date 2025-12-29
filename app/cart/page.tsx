@@ -11,6 +11,7 @@ import { useCart } from "@/features/cart/context/cart-context";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { CustomerLayout } from "@/components/layout";
+import { toast } from "sonner";
 
 export default function CartPage() {
   const { data: session, status } = useSession();
@@ -48,6 +49,15 @@ export default function CartPage() {
   }, 0) || 0;
 
   const adjustedTotalPrice = totalPrice;
+
+  const handleCheckout = () => {
+    if (!cart || cart.cart_items.length === 0) {
+      toast.error("Keranjang kosong");
+      return;
+    }
+
+    router.push("/checkout");
+  };
 
   if (status === "loading" || loading) {
     return (
@@ -112,6 +122,7 @@ export default function CartPage() {
               </div>
               <Button
                 type="button"
+                onClick={handleCheckout}
                 className="text-sm md:text-base font-medium bg-black rounded-full w-full py-4 h-[54px] md:h-[60px] group"
               >
                 Go to Checkout

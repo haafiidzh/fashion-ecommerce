@@ -6,5 +6,10 @@ export const orderApi = {
     const response = await apiClient.get("/orders");
     return response.data.data as Order[];
   },
+
+  async getAdminOrders(): Promise<Order[]> {
+    const response = await apiClient.get("/admin/orders");
+    return response.data.data as Order[];
+  },
 };
 

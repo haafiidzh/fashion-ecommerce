@@ -20,7 +20,7 @@ import OrdersSection from "@/features/user-account/components/orders-section";
 export default function AccountPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<AccountSection>("info");
+  const [activeSection, setActiveSection] = useState<AccountSection>("orders");
   const [user, setUser] = useState<UserAccount | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -57,10 +57,16 @@ export default function AccountPage() {
       }
 
       // Fetch orders
+      console.log('Fetching orders for user ID:', session.user.id);
       const ordersRes = await fetch(`/api/orders?userId=${session.user.id}`);
+      console.log('Orders response status:', ordersRes.status);
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
-        setOrders(ordersData);
+        console.log('Orders data:', ordersData);
+        setOrders(ordersData.data || []); // Extract data array from API response
+      } else {
+        console.error('Failed to fetch orders:', ordersRes.status, ordersRes.statusText);
+        setOrders([]); // Set empty array on error
       }
     } catch (error) {
       console.error("Error fetching user data:", error);

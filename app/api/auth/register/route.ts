@@ -22,6 +22,20 @@ export async function POST(request: Request) {
       data: { username, email, password: hashedPassword }
     });
 
+    // Assign customer role to new user
+    const customerRole = await prisma.roles.findFirst({
+      where: { name: "customer" }
+    });
+
+    if (customerRole) {
+      await prisma.user_roles.create({
+        data: {
+          user_id: user.id,
+          role_id: customerRole.id
+        }
+      });
+    }
+
     return NextResponse.json(
       { 
         message: "Registrasi berhasil",

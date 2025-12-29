@@ -2,20 +2,51 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CustomerLayout } from "@/components/layout";
-import { User, Mail, ShoppingBag, MapPin, Lock } from "lucide-react";
+import { User, Mail, ShoppingBag, Star, MapPin, Lock } from "lucide-react";
 import Link from "next/link";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [addressesCount, setAddressesCount] = useState(0);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchUserStats();
+    }
+  }, [session]);
+
+  const fetchUserStats = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      // Fetch orders count
+      const ordersRes = await fetch(`/api/orders?userId=${session.user.id}`);
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        const ordersArray = ordersData.data || [];
+        setOrdersCount(ordersArray.length || 0);
+      }
+
+      // Fetch addresses count
+      const addressesRes = await fetch(`/api/addresses?userId=${session.user.id}`);
+      if (addressesRes.ok) {
+        const addressesData = await addressesRes.json();
+        setAddressesCount(addressesData.length || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -45,6 +76,12 @@ export default function ProfilePage() {
       label: "My Orders",
       description: "Track and manage your orders",
       href: "/profile/orders",
+    },
+    {
+      icon: Star,
+      label: "My Reviews",
+      description: "View your product reviews",
+      href: "/profile/reviews",
     },
     {
       icon: MapPin,
@@ -84,11 +121,11 @@ export default function ProfilePage() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-xl border border-black/10 p-5 text-center">
-            <div className="text-2xl font-bold text-black mb-1">2</div>
+            <div className="text-2xl font-bold text-black mb-1">{ordersCount}</div>
             <div className="text-sm text-black/60">Orders</div>
           </div>
           <div className="bg-white rounded-xl border border-black/10 p-5 text-center">
-            <div className="text-2xl font-bold text-black mb-1">1</div>
+            <div className="text-2xl font-bold text-black mb-1">{addressesCount}</div>
             <div className="text-sm text-black/60">Addresses</div>
           </div>
           <div className="bg-white rounded-xl border border-black/10 p-5 text-center">

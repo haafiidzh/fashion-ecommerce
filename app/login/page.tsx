@@ -34,7 +34,26 @@ export default function LoginPage() {
         throw new Error(result.error);
       }
 
-      router.push("/dashboard");
+      // Check user role and redirect accordingly
+      try {
+        const response = await fetch('/api/user-role');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.isAdmin) {
+            router.push("/dashboard");
+          } else {
+            router.push("/shop");
+          }
+        } else {
+          // Default to shop if role check fails
+          router.push("/shop");
+        }
+      } catch (error) {
+        console.error("Failed to check user role:", error);
+        // Default to shop if role check fails
+        router.push("/shop");
+      }
+
       router.refresh();
     },
   });
