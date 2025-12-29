@@ -9,10 +9,10 @@ export const productApi = {
                 category_id: 1,
                 name: "Laptop Gaming",
                 slug: "laptop-gaming",
-                price: "15000000",
+                price: 15000000,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
-                category: {
+                product_category: {
                     id: 1,
                     name: "Electronics"
                 }
@@ -22,10 +22,10 @@ export const productApi = {
                 category_id: 2,
                 name: "Office Chair",
                 slug: "office-chair",
-                price: "2500000",
+                price: 2500000,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
-                category: {
+                product_category: {
                     id: 2,
                     name: "Furniture"
                 }
@@ -35,10 +35,10 @@ export const productApi = {
                 category_id: 1,
                 name: "Smartphone",
                 slug: "smartphone",
-                price: "8000000",
+                price: 8000000,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
-                category: {
+                product_category: {
                     id: 1,
                     name: "Electronics"
                 }

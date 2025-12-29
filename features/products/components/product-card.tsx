@@ -22,7 +22,8 @@ const ProductCard = ({data}: ProductCardProps) => {
     const discount = generateRandomDiscount();
 
     const imageUrl = data.images && data.images.length > 0 ? data.images[0].url : '/placeholder-image.png';
-    const imageAlt = data.images && data.images.length > 0 ? data.images[0].alt : data.name;
+    const imageAlt = data.images && data.images.length > 0 ? (data.images[0].alt || data.name) : data.name;
+    const price = data.price || 0;
 
     const productSlug = data.slug || data.name.toLowerCase().replace(/ /g, '-');
 
@@ -61,26 +62,26 @@ const ProductCard = ({data}: ProductCardProps) => {
                 {discount.percentage > 0 ? (
                     <span className="font-bold text-black text-xl xl:text-2xl">
             {`Rp. ${Math.round(
-                data.price - (data.price * discount.percentage) / 100
+                price - (price * discount.percentage) / 100
             )}`}
           </span>
                 ) : discount.amount > 0 ? (
                     <span className="font-bold text-black text-xl xl:text-2xl">
-            {`Rp. ${data.price - discount.amount}`}
+            {`Rp. ${price - discount.amount}`}
           </span>
                 ) : (
                     <span className="font-bold text-black text-xl xl:text-2xl">
-            ${data.price}
+            ${price}
           </span>
                 )}
                 {discount.percentage > 0 && (
                     <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-            ${data.price}
+            ${price}
           </span>
                 )}
                 {discount.amount > 0 && (
                     <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-            ${data.price}
+            ${price}
           </span>
                 )}
                 {discount.percentage > 0 ? (
